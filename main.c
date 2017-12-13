@@ -107,10 +107,12 @@ void remoteControllerCallback(uint16_t code, uint16_t type, uint32_t value)
 				if (code != KEYCODE_NUMBER_0)
 				{
 					printf("\nNumber %d pressed\n", code - 1);
+					channelSwitch(code - 1);
 				}
 				else
 				{
 					printf("\nNumber 0 pressed\n");
+					channelSwitch(0);
 				}
 			}
 			else

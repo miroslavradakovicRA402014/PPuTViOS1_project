@@ -62,6 +62,14 @@ StreamControllerError channelUp();
 StreamControllerError channelDown();
 
 /**
+ * @brief Channel switch to channel number
+ *
+ * @return stream controller error
+ */
+StreamControllerError channelSwitch(int16_t ch);
+
+
+/**
  * @brief Returns current channel info
  *
  * @param [out] channelInfo - channel info structure with current channel info

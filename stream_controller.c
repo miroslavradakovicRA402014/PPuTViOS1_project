@@ -118,6 +118,25 @@ StreamControllerError channelDown()
     return SC_NO_ERROR;
 }
 
+StreamControllerError channelSwitch(int16_t ch)
+{
+
+    if (ch > patTable->serviceInfoCount)
+    {
+        return SC_ERROR;
+    } 
+      
+    programNumber = ch;
+ 	
+	printf("\nSwitch to channel %d \n", ch);
+   
+    /* set flag to start current channel */
+    changeChannel = true;
+
+    return SC_NO_ERROR;
+}
+
+
 StreamControllerError getChannelInfo(ChannelInfo* channelInfo)
 {
     if (channelInfo == NULL)
@@ -231,6 +250,8 @@ void* streamControllerTask()
 	}  
     memset(patTable, 0x0, sizeof(PatTable));
 
+	//printPatTable(patTable);
+
     /* allocate memory for PMT table section */
     pmtTable=(PmtTable*)malloc(sizeof(PmtTable));
     if(pmtTable==NULL)
@@ -338,6 +359,7 @@ void* streamControllerTask()
         {
             changeChannel = false;
             startChannel(programNumber);
+			printf("\nSwitched to channel %d\n", programNumber);
         }
     }
 }
