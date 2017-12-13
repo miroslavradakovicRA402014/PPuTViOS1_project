@@ -34,7 +34,7 @@ RemoteControllerError remoteControllerDeinit()
 
 RemoteControllerError registerRemoteControllerCallback(RemoteControllerCallback remoteControllerCallback)
 {
-	/* Register callback */
+	/* register callback */
 	callback = remoteControllerCallback;
 	if (callback == NULL)
 	{
@@ -47,7 +47,7 @@ RemoteControllerError registerRemoteControllerCallback(RemoteControllerCallback 
 
 RemoteControllerError unregisterRemoteControllerCallback(RemoteControllerCallback remoteControllerCallback)
 {
-	/* Unregister callback */
+	/* unregister callback */
 	if (callback == NULL)
 	{
 		printf("Error can't unregister callback!\n");

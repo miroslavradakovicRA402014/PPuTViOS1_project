@@ -1,4 +1,5 @@
 #include "remote_controller.h"
+#include "stream_controller.h"
 
 static inline void textColor(int32_t attr, int32_t fg, int32_t bg)
 {
@@ -24,7 +25,7 @@ if (x != 0)                                                                 \
 static void remoteControllerCallback(uint16_t code, uint16_t type, uint32_t value);
 static pthread_cond_t deinitCond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t deinitMutex = PTHREAD_MUTEX_INITIALIZER;
-//static ChannelInfo channelInfo;
+static ChannelInfo channelInfo;
 
 int main()
 {
@@ -35,7 +36,7 @@ int main()
     ERRORCHECK(registerRemoteControllerCallback(remoteControllerCallback));
     
     /* initialize stream controller module */
-    //ERRORCHECK(streamControllerInit());
+    ERRORCHECK(streamControllerInit());
 
     /* wait for a EXIT remote controller key press event */
     pthread_mutex_lock(&deinitMutex);
@@ -52,7 +53,7 @@ int main()
     ERRORCHECK(remoteControllerDeinit());
 
     /* deinitialize stream controller module */
-   // ERRORCHECK(streamControllerDeinit());
+    ERRORCHECK(streamControllerDeinit());
   
     return 0;
 }
@@ -64,7 +65,7 @@ void remoteControllerCallback(uint16_t code, uint16_t type, uint32_t value)
 	{
 		case KEYCODE_INFO:
             printf("\nInfo pressed\n");  
-		/*        
+		        
             if (getChannelInfo(&channelInfo) == SC_NO_ERROR)
             {
                 printf("\n********************* Channel info *********************\n");
@@ -73,7 +74,6 @@ void remoteControllerCallback(uint16_t code, uint16_t type, uint32_t value)
                 printf("Video pid: %d\n", channelInfo.videoPid);
                 printf("**********************************************************\n");
             }
-		*/
 			break;
 		case KEYCODE_P_PLUS:
 			printf("\nCH+ pressed\n");
