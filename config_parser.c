@@ -40,7 +40,26 @@ ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 		return CONFIG_PARSE_ERROR;
 	}
 
+	if (!strcmp(configAudioType,"AUDIO_TYPE_MPEG_AUDIO") || !strcmp(configAudioType,"audio_type_mpeg_audio"))
+	{
+		config->configAudioType = AUDIO_TYPE_MPEG_AUDIO;
+	}
+	else
+	{
+		printf("\nModule %s doesn't exist!\n", configAudioType);	
+		return CONFIG_PARSE_ERROR;
+	}
 
+	if (!strcmp(configVideoType,"VIDEO_TYPE_MPEG2") || !strcmp(configVideoType,"video_type_mpeg2"))
+	{
+		config->configVideoType = VIDEO_TYPE_MPEG2;
+	}
+	else
+	{
+		printf("\nModule %s doesn't exist!\n", configVideoType);	
+		return CONFIG_PARSE_ERROR;
+	}
+	
 	printf("\nFrequency :%d", config->configFreq);
 	printf("\nBandwidht :%d", config->configBandwidth);
 	printf("\nAudio PID :%d", config->configAudioPid);		

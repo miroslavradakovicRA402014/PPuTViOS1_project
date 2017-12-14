@@ -271,7 +271,7 @@ void startChannel(int32_t channelNumber)
         }
 
         /* create video stream */
-        if(Player_Stream_Create(playerHandle, sourceHandle, videoPid, VIDEO_TYPE_MPEG2, &streamHandleV))
+        if(Player_Stream_Create(playerHandle, sourceHandle, videoPid, config.configVideoType, &streamHandleV))
         {
             printf("\n%s : ERROR Cannot create video stream\n", __FUNCTION__);
             streamControllerDeinit();
@@ -288,7 +288,7 @@ void startChannel(int32_t channelNumber)
         }
 
 	    /* create audio stream */
-        if(Player_Stream_Create(playerHandle, sourceHandle, audioPid, AUDIO_TYPE_MPEG_AUDIO, &streamHandleA))
+        if(Player_Stream_Create(playerHandle, sourceHandle, audioPid, config.configAudioType, &streamHandleA))
         {
             printf("\n%s : ERROR Cannot create audio stream\n", __FUNCTION__);
             streamControllerDeinit();
