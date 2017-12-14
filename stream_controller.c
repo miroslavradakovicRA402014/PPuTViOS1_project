@@ -17,6 +17,7 @@ static uint32_t filterHandle = 0;
 static uint8_t threadExit = 0;
 static bool changeChannel = false;
 static bool changeVolume = false;
+static bool volumeMute = false;
 static int16_t programNumber = 0;
 static int16_t volumeLevel = 0;
 static ChannelInfo currentChannel;
@@ -151,6 +152,8 @@ StreamControllerError volumeUp()
     /* set flag to start volume up */
     changeVolume = true;
 
+	volumeMute = false;
+
     return SC_NO_ERROR;
 }
 
@@ -166,9 +169,29 @@ StreamControllerError volumeDown()
     /* set flag to start volume down */
     changeVolume = true;
 
+	volumeMute = false;
+
     return SC_NO_ERROR;
 }
 
+StreamControllerError mute()
+{   
+    if (!volumeMute)
+    {
+        volumeMute = true;
+    }
+	else
+	{
+		volumeMute = false;		
+	} 
+
+	printf("\nMute volume %d \n", 0);
+ 
+    /* set flag to start volume mute */
+    changeVolume = true;
+
+    return SC_NO_ERROR;
+}
 
 StreamControllerError getChannelInfo(ChannelInfo* channelInfo)
 {
@@ -398,9 +421,19 @@ void* streamControllerTask()
 		if (changeVolume)
         {
             changeVolume = false;
-			if (Player_Volume_Set(playerHandle, volumeLevel * 165400000))
+			if (!volumeMute)
 			{
-				//printf("\n%s : ERROR Player_Volume_Set() fail\n", __FUNCTION__);
+				if (Player_Volume_Set(playerHandle, volumeLevel * 165400000))
+				{
+					printf("\n%s : ERROR Player_Volume_Set() fail\n", __FUNCTION__);
+				}
+			}
+			else
+			{
+				if (Player_Volume_Set(playerHandle, 0))
+				{
+					printf("\n%s : ERROR Player_Volume_Set() fail\n", __FUNCTION__);
+				}
 			}
 			printf("\nVolume changed to %d\n", volumeLevel);
         }

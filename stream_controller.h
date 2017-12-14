@@ -86,6 +86,13 @@ StreamControllerError volumeUp();
  */
 StreamControllerError volumeDown();
 
+/**
+ * @brief Volume mute
+ *
+ * @return stream controller error
+ */
+StreamControllerError mute();
+
 
 /**
  * @brief Returns current channel info

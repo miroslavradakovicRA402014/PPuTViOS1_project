@@ -93,7 +93,7 @@ void remoteControllerCallback(uint16_t code, uint16_t type, uint32_t value)
 			break;
 		case KEYCODE_MUTE:
 			printf("\nMUTE pressed\n");
-            //channelUp();
+			mute();
 			break;
 		case KEYCODE_EXIT:
 			printf("\nExit pressed\n");
