@@ -1,5 +1,7 @@
 #include "stream_controller.h"
 #include "tables.h"
+#include "config_parser.h"
+#include <string.h>
 
 static PatTable *patTable;
 static PmtTable *pmtTable;
@@ -22,6 +24,9 @@ static int16_t programNumber = 0;
 static int16_t volumeLevel = 0;
 static ChannelInfo currentChannel;
 static bool isInitialized = false;
+static InitConfig config; 
+static char configPathname[CONFIG_NAME_LEN];
+
 
 static struct timespec lockStatusWaitTime;
 static struct timeval now;
@@ -29,17 +34,21 @@ static pthread_t scThread;
 static pthread_cond_t demuxCond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t demuxMutex = PTHREAD_MUTEX_INITIALIZER;
 
+
+
 static void* streamControllerTask();
 static void startChannel(int32_t channelNumber);
 
 
-StreamControllerError streamControllerInit()
+StreamControllerError streamControllerInit(char* configFile)
 {
     if (pthread_create(&scThread, NULL, &streamControllerTask, NULL))
     {
         printf("Error creating input event task!\n");
         return SC_THREAD_ERROR;
     }
+
+	strcpy(configPathname, configFile);
 
     return SC_NO_ERROR;
 }
@@ -108,7 +117,7 @@ StreamControllerError channelDown()
 {
     if (programNumber <= 0)
     {
-        programNumber = patTable->serviceInfoCount - 2;
+        programNumber = patTable->serviceInfoCount - 3;
     } 
     else
     {
@@ -332,14 +341,21 @@ void* streamControllerTask()
 		printf("\n%s : ERROR Tuner_Register_Status_Callback() fail\n", __FUNCTION__);
 	}
     
+	/* parse init config file */
+	if (!parseConfigFile(configPathname, &config))
+	{
+	   printf("\nERROR parseConfigFile() fail\n");		
+	   return (void*) SC_ERROR;		
+	}
+
     /* lock to frequency */
-    if(!Tuner_Lock_To_Frequency(DESIRED_FREQUENCY, BANDWIDTH, DVB_T))
+    if(!Tuner_Lock_To_Frequency(config.configFreq, config.configBandwidth, config.configModule))
     {
-        printf("\n%s: INFO Tuner_Lock_To_Frequency(): %d Hz - success!\n",__FUNCTION__,DESIRED_FREQUENCY);
+        printf("\n%s: INFO Tuner_Lock_To_Frequency(): %d Hz - success!\n",__FUNCTION__,config.configFreq);
     }
     else
     {
-        printf("\n%s: ERROR Tuner_Lock_To_Frequency(): %d Hz - fail!\n",__FUNCTION__,DESIRED_FREQUENCY);
+        printf("\n%s: ERROR Tuner_Lock_To_Frequency(): %d Hz - fail!\n",__FUNCTION__,config.configFreq);
         free(patTable);
         free(pmtTable);
         Tuner_Deinit();
@@ -402,7 +418,17 @@ void* streamControllerTask()
         return (void*) SC_ERROR;
 	}
 	pthread_mutex_unlock(&demuxMutex);
-    
+
+
+	/* set program number to config program number */
+	if (config.configProgramNumber >= patTable->serviceInfoCount - 2)
+	{
+		printf("\nERROR Config channel doesn't exist\n");		
+		return (void*) SC_ERROR;				
+ 	}
+	programNumber = config.configProgramNumber;    
+
+
     /* start current channel */
     startChannel(programNumber);
     

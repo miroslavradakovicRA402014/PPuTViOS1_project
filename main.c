@@ -1,6 +1,8 @@
 #include "remote_controller.h"
 #include "stream_controller.h"
 
+#define ARG_NUM 2
+
 static inline void textColor(int32_t attr, int32_t fg, int32_t bg)
 {
    char command[13];
@@ -27,8 +29,15 @@ static pthread_cond_t deinitCond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t deinitMutex = PTHREAD_MUTEX_INITIALIZER;
 static ChannelInfo channelInfo;
 
-int main()
+int main(int argc, char* argv[])
 {
+	/* read config file */
+	if (argc != ARG_NUM)
+	{
+		printf("\nERROR Don't enough input arguments!\n");
+		return 0;
+	}
+
     /* initialize remote controller module */
     ERRORCHECK(remoteControllerInit());
     
@@ -36,7 +45,7 @@ int main()
     ERRORCHECK(registerRemoteControllerCallback(remoteControllerCallback));
     
     /* initialize stream controller module */
-    ERRORCHECK(streamControllerInit());
+    ERRORCHECK(streamControllerInit(argv[1]));
 
     /* wait for a EXIT remote controller key press event */
     pthread_mutex_lock(&deinitMutex);

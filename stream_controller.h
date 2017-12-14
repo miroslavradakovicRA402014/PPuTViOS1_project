@@ -13,6 +13,7 @@
 #define DESIRED_FREQUENCY 754000000	        /* Tune frequency in Hz */
 #define BANDWIDTH 8    				        /* Bandwidth in Mhz */
 
+#define CONFIG_NAME_LEN 20
 
 #define MAX_VOL_LEVEL 10
 
@@ -37,11 +38,27 @@ typedef struct _ChannelInfo
 }ChannelInfo;
 
 /**
+ * @brief Structure that defines initial config
+ */
+typedef struct _InitConfig 
+{
+	int32_t configFreq;
+	int16_t configBandwidth;	
+    int16_t configAudioPid;
+    int16_t configVideoPid;	
+	int16_t configProgramNumber;
+	t_Module configModule;
+    tStreamType configAudioType;
+	tStreamType configVideoType;	
+}InitConfig;
+
+/**
  * @brief Initializes stream controller module
- *
+ *	
+ * @param [in] configFile - config file path 
  * @return stream controller error code
  */
-StreamControllerError streamControllerInit();
+StreamControllerError streamControllerInit(char* configFile);
 
 /**
  * @brief Deinitializes stream controller module
@@ -62,7 +79,6 @@ StreamControllerError channelUp();
  *
  * @return stream controller error
  */
-
 StreamControllerError channelDown();
 
 /**
@@ -92,7 +108,6 @@ StreamControllerError volumeDown();
  * @return stream controller error
  */
 StreamControllerError mute();
-
 
 /**
  * @brief Returns current channel info

@@ -34,6 +34,7 @@ SRCS =  ./main.c
 SRCS += ./remote_controller.c
 SRCS += ./stream_controller.c
 SRCS += ./table_parser.c 
+SRCS += ./config_parser.c 
 
 parser_playback_sample:
 	$(CC) -o project_exe $(INCS) $(SRCS) $(CFLAGS) $(LIBS)
