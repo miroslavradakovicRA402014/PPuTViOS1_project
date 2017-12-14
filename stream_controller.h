@@ -13,6 +13,9 @@
 #define DESIRED_FREQUENCY 754000000	        /* Tune frequency in Hz */
 #define BANDWIDTH 8    				        /* Bandwidth in Mhz */
 
+
+#define MAX_VOL_LEVEL 10
+
 /**
  * @brief Structure that defines stream controller error
  */
@@ -59,6 +62,7 @@ StreamControllerError channelUp();
  *
  * @return stream controller error
  */
+
 StreamControllerError channelDown();
 
 /**
@@ -67,6 +71,20 @@ StreamControllerError channelDown();
  * @return stream controller error
  */
 StreamControllerError channelSwitch(int16_t ch);
+
+/**
+ * @brief Volume up
+ *
+ * @return stream controller error
+ */
+StreamControllerError volumeUp();
+
+/**
+ * @brief Volume down
+ *
+ * @return stream controller error
+ */
+StreamControllerError volumeDown();
 
 
 /**
