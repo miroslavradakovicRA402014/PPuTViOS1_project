@@ -260,8 +260,8 @@ void drawVolumeSymbol(int32_t volumeLevel)
 	DFBCHECK(primary->Blit(primary,
                            /*source surface*/ volumeSurface,
                            /*source region, NULL to blit the whole surface*/ NULL,
-                           /*destination x coordinate of the upper left corner of the image*/50,
-                           /*destination y coordinate of the upper left corner of the image*/screenHeight - volumeHeight -50));
+                           /*destination x coordinate of the upper left corner of the image*/screenWidth - volumeWidth - 50,
+                           /*destination y coordinate of the upper left corner of the image*/screenHeight/2 - volumeHeight -50));
     
     
     /* switch between the displayed and the work buffer (update the display) */
