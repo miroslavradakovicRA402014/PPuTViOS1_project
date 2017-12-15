@@ -22,11 +22,12 @@ static bool changeVolume = false;
 static bool volumeMute = false;
 static int16_t programNumber = 0;
 static int16_t volumeLevel = 0;
-static ChannelInfo currentChannel;
 static bool isInitialized = false;
 static InitConfig config; 
 static char configPathname[CONFIG_NAME_LEN];
 
+
+ChannelInfo currentChannel;
 
 static struct timespec lockStatusWaitTime;
 static struct timeval now;

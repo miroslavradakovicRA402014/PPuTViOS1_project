@@ -14,15 +14,18 @@ INCS += -I./include/ 							\
 		-I$(GALOIS_INCLUDE)/Common/include/     \
 		-I$(GALOIS_INCLUDE)/OSAL/include/		\
 		-I$(GALOIS_INCLUDE)/OSAL/include/CPU1/	\
-		-I$(GALOIS_INCLUDE)/PE/Common/include/
+		-I$(GALOIS_INCLUDE)/PE/Common/include/	\
+        -I$(SYSROOT)/usr/include/directfb/
 
 LIBS_PATH = -L/home/student/pputvios1/vezbe/tdp_api
 
 LIBS_PATH += -L$(SYSROOT)/home/galois/lib/
+LIBS_PATH += -L$(SYSROOT)/home/galois/lib/directfb-1.4-6-libs
 
 LIBS := $(LIBS_PATH) -ltdp
 
 LIBS += $(LIBS_PATH) -lOSAL	-lshm -lPEAgent
+LIBS += $(LIBS_PATH) -ldirectfb -ldirect -lfusion -lrt
 
 CFLAGS += -D__LINUX__ -O0 -Wno-psabi --sysroot=$(SYSROOT)
 
@@ -34,7 +37,8 @@ SRCS =  ./main.c
 SRCS += ./remote_controller.c
 SRCS += ./stream_controller.c
 SRCS += ./table_parser.c 
-SRCS += ./config_parser.c 
+SRCS += ./config_parser.c
+SRCS += ./graphic_controller.c  
 
 parser_playback_sample:
 	$(CC) -o project_exe $(INCS) $(SRCS) $(CFLAGS) $(LIBS)
