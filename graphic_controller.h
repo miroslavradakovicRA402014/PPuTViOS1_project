@@ -46,8 +46,7 @@ typedef enum _GraphicControllerError
 typedef struct _ScreenState
 {
 	bool drawChannel;
-	bool drawVolumeCnange; 
-	bool drawMute;
+	bool drawVolumeChange; 
 	bool drawInfo;
 	bool wipeScreen;
 }ScreenState;
@@ -67,12 +66,17 @@ GraphicControllerError graphicControllerInit();
  */
 GraphicControllerError graphicControllerDeinit();
 /**
- * @brief Deinitializes graphic controller module
+ * @brief Draw cnannel number
  *
  * @return graphic controller error code
  */
 GraphicControllerError drawCnannel(int32_t channelNumber);
-
+/**
+ * @brief Draw volume level symbol
+ *
+ * @return graphic controller error code
+ */
+GraphicControllerError drawVolumeLevel(int32_t volumeLevel);
 
 
 #endif /* __GRAPHIC_CONTROLLER_H__ */

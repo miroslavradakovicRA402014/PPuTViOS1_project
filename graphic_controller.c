@@ -2,14 +2,16 @@
 
 static timer_t timerId;
 static IDirectFBSurface *primary = NULL;
+static DFBSurfaceDescription surfaceDesc;
 IDirectFB *dfbInterface = NULL;
 static int32_t screenWidth = 0;
 static int32_t screenHeight = 0;
 static bool isInitialized = false;
 static uint8_t threadExit = 0;
-static ScreenState state = {false, false, false, false, false};
-static int32_t programNumber = 0;
+static ScreenState state = {false, false, false, false};
 
+static int32_t programNumberRender = 0;
+static int32_t volumeLevelRender = 0;
 
 static struct itimerspec timerSpec;
 static struct itimerspec timerSpecOld;
@@ -19,6 +21,7 @@ static pthread_t gcThread;
 static void* graphicControllerTask();
 static void wipeScreen(union sigval signalArg);
 static void drawKeycode(int32_t keycode);
+static void drawVolumeSymbol(int32_t volumeLevel);
 
 
 GraphicControllerError graphicControllerInit()
@@ -34,14 +37,18 @@ GraphicControllerError graphicControllerInit()
 
 GraphicControllerError drawCnannel(int32_t channelNumber)
 {
-	programNumber = channelNumber;
+	programNumberRender = channelNumber;
 	state.drawChannel = true;
 }
 
+GraphicControllerError drawVolumeLevel(int32_t volumeLevel)
+{
+	volumeLevelRender = volumeLevel;
+	state.drawVolumeChange = true;
+}
 
 static void* graphicControllerTask()
 {
-	DFBSurfaceDescription surfaceDesc;
 	int32_t ret;
 
 	/* structure for timer specification */
@@ -85,8 +92,14 @@ static void* graphicControllerTask()
 	{	
 		if (state.drawChannel)
 		{
-			drawKeycode(programNumber);
+			drawKeycode(programNumberRender);
 			state.drawChannel = false;
+		}
+
+		if (state.drawVolumeChange)
+		{
+			drawVolumeSymbol(volumeLevelRender);
+			state.drawVolumeChange = false;
 		}
 	}
 
@@ -118,7 +131,8 @@ GraphicControllerError graphicControllerDeinit()
     return GC_NO_ERROR;
 }
 
-void drawKeycode(int32_t keycode){
+void drawKeycode(int32_t keycode)
+{
     int32_t ret;
     IDirectFBFont *fontInterface = NULL;
     DFBFontDescription fontDesc;
@@ -168,7 +182,94 @@ void drawKeycode(int32_t keycode){
     }
 }
 
-void wipeScreen(union sigval signalArg){
+void drawVolumeSymbol(int32_t volumeLevel)
+{
+    int32_t ret;
+	IDirectFBImageProvider *provider;
+	IDirectFBSurface *volumeSurface = NULL;
+	int32_t volumeHeight, volumeWidth;
+	
+    /* create the image provider for the specified file */
+	switch (volumeLevel)
+	{
+		case 0:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_0.png", &provider));	
+			break;
+		case 1:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_1.png", &provider));	
+			break;
+		case 2:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_2.png", &provider));	
+			break;
+		case 3:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_3.png", &provider));	
+			break;
+		case 4:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_4.png", &provider));	
+			break;
+		case 5:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_5.png", &provider));	
+			break;
+		case 6:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_6.png", &provider));	
+			break;
+		case 7:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_7.png", &provider));	
+			break;
+		case 8:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_8.png", &provider));	
+			break;
+		case 9:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_9.png", &provider));	
+			break;
+		case 10:
+			DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "volume_10.png", &provider));	
+			break;
+	}
+
+    /* get surface descriptor for the surface where the image will be rendered */
+	DFBCHECK(provider->GetSurfaceDescription(provider, &surfaceDesc));
+    /* create the surface for the image */
+	DFBCHECK(dfbInterface->CreateSurface(dfbInterface, &surfaceDesc, &volumeSurface));
+    /* render the image to the surface */
+	DFBCHECK(provider->RenderTo(provider, volumeSurface, NULL));
+	
+    /* cleanup the provider after rendering the image to the surface */
+	provider->Release(provider);
+	
+    /* fetch the logo size and add (blit) it to the screen */
+	DFBCHECK(volumeSurface->GetSize(volumeSurface, &volumeWidth, &volumeHeight));
+	DFBCHECK(primary->Blit(primary,
+                           /*source surface*/ volumeSurface,
+                           /*source region, NULL to blit the whole surface*/ NULL,
+                           /*destination x coordinate of the upper left corner of the image*/50,
+                           /*destination y coordinate of the upper left corner of the image*/screenHeight - volumeHeight -50));
+    
+    
+    /* switch between the displayed and the work buffer (update the display) */
+	DFBCHECK(primary->Flip(primary,
+                           /*region to be updated, NULL for the whole surface*/NULL,
+                           /*flip flags*/0));
+    
+    
+    /* set the timer for clearing the screen */
+    
+    memset(&timerSpec,0,sizeof(timerSpec));
+    
+    /* specify the timer timeout time */
+    timerSpec.it_value.tv_sec = 3;
+    timerSpec.it_value.tv_nsec = 0;
+    
+    /* set the new timer specs */
+    ret = timer_settime(timerId,0,&timerSpec,&timerSpecOld);
+    if(ret == -1)
+	{
+        printf("Error setting timer in %s!\n", __FUNCTION__);
+    }
+}
+
+void wipeScreen(union sigval signalArg)
+{
     int32_t ret;
 
     /* clear screen */

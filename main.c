@@ -31,6 +31,7 @@ static pthread_mutex_t deinitMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 extern ChannelInfo currentChannel;
+extern int16_t volumeLevel;
 
 int main(int argc, char* argv[])
 {
@@ -61,7 +62,7 @@ int main(int argc, char* argv[])
 	}
 	pthread_mutex_unlock(&deinitMutex);
 
-	/* initialize graphic controller module */
+	/* deinitialize graphic controller module */
     ERRORCHECK(graphicControllerDeinit());
     
     /* unregister remote controller callback */
@@ -106,14 +107,17 @@ void remoteControllerCallback(uint16_t code, uint16_t type, uint32_t value)
 		case KEYCODE_V_PLUS:
 			printf("\nVOL+ pressed\n");
             volumeUp();
+			drawVolumeLevel(volumeLevel);
 			break;
 		case KEYCODE_V_MINUS:
 			printf("\nVOL- pressed\n");
             volumeDown();
+			drawVolumeLevel(volumeLevel);
 			break;
 		case KEYCODE_MUTE:
 			printf("\nMUTE pressed\n");
 			mute();
+			drawVolumeLevel(0);
 			break;
 		case KEYCODE_EXIT:
 			printf("\nExit pressed\n");
