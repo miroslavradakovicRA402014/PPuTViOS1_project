@@ -12,6 +12,8 @@ static ScreenState state = {false, false, false, false};
 
 static int32_t programNumberRender = 0;
 static int32_t volumeLevelRender = 0;
+static int32_t audioPidRender = 0;
+static int32_t videoPidRender = 0;
 
 static struct itimerspec timerSpec;
 static struct itimerspec timerSpecOld;
@@ -20,8 +22,9 @@ static pthread_t gcThread;
 
 static void* graphicControllerTask();
 static void wipeScreen(union sigval signalArg);
-static void drawKeycode(int32_t keycode);
+static void drawProgram(int32_t keycode);
 static void drawVolumeSymbol(int32_t volumeLevel);
+static void drawBanner(int32_t audioPid, int32_t videoPid);
 
 
 GraphicControllerError graphicControllerInit()
@@ -39,12 +42,20 @@ GraphicControllerError drawCnannel(int32_t channelNumber)
 {
 	programNumberRender = channelNumber;
 	state.drawChannel = true;
+	state.drawInfo = true;	
 }
 
 GraphicControllerError drawVolumeLevel(int32_t volumeLevel)
 {
 	volumeLevelRender = volumeLevel;
 	state.drawVolumeChange = true;
+}
+
+GraphicControllerError drawInfoBanner(int32_t audioPid, int32_t videoPid)
+{
+	audioPidRender = audioPid;
+	videoPidRender = videoPid;
+	state.drawInfo = true;	
 }
 
 static void* graphicControllerTask()
@@ -92,7 +103,7 @@ static void* graphicControllerTask()
 	{	
 		if (state.drawChannel)
 		{
-			drawKeycode(programNumberRender);
+			drawProgram(programNumberRender);
 			state.drawChannel = false;
 		}
 
@@ -100,6 +111,12 @@ static void* graphicControllerTask()
 		{
 			drawVolumeSymbol(volumeLevelRender);
 			state.drawVolumeChange = false;
+		}
+
+		if (state.drawInfo)
+		{
+			drawBanner(audioPidRender,videoPidRender);
+			state.drawInfo = false;
 		}
 	}
 
@@ -131,7 +148,7 @@ GraphicControllerError graphicControllerDeinit()
     return GC_NO_ERROR;
 }
 
-void drawKeycode(int32_t keycode)
+void drawProgram(int32_t keycode)
 {
     int32_t ret;
     IDirectFBFont *fontInterface = NULL;
@@ -177,7 +194,8 @@ void drawKeycode(int32_t keycode)
     
     /* set the new timer specs */
     ret = timer_settime(timerId,0,&timerSpec,&timerSpecOld);
-    if(ret == -1){
+    if(ret == -1)
+	{
         printf("Error setting timer in %s!\n", __FUNCTION__);
     }
 }
@@ -267,6 +285,70 @@ void drawVolumeSymbol(int32_t volumeLevel)
         printf("Error setting timer in %s!\n", __FUNCTION__);
     }
 }
+
+
+void drawBanner(int32_t audioPid, int32_t videoPid)
+{
+    int32_t ret;
+
+    IDirectFBFont *fontInterface = NULL;
+    DFBFontDescription fontDesc;
+	char audioInfo[20];     
+	char videoInfo[20];
+	char audioPidStr[5];
+	char videoPidStr[5];
+
+	strcpy(audioInfo, "Audio PID: ");
+	strcpy(videoInfo, "Video PID: ");
+
+    /*  draw the frame */
+        
+    DFBCHECK(primary->SetColor(primary, 0x80, 0x40, 0x10, 0xff));
+    DFBCHECK(primary->FillRectangle(primary, 50, (screenHeight/3)*2, screenWidth-100, screenHeight/4));
+      
+    /* draw info */
+    
+	fontDesc.flags = DFDESC_HEIGHT;
+	fontDesc.height = FONT_HEIGHT_CHANNEL;
+	
+	DFBCHECK(dfbInterface->CreateFont(dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
+	DFBCHECK(primary->SetFont(primary, fontInterface));
+
+
+	/* generate audioPid string */
+    sprintf(audioPidStr,"%d",audioPid);
+	strcat(audioInfo, audioPidStr);
+	/* generate videoPid string */
+    sprintf(videoPidStr,"%d",videoPid);
+	strcat(videoInfo, videoPidStr);
+    
+    /* draw the string */
+
+    DFBCHECK(primary->SetColor(primary, 0x10, 0x80, 0x40, 0xff));
+	DFBCHECK(primary->DrawString(primary, audioInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));
+	DFBCHECK(primary->DrawString(primary, videoInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL*3, DSTF_CENTER));    
+    
+    /* update screen */
+    DFBCHECK(primary->Flip(primary, NULL, 0));
+    
+    
+    /* set the timer for clearing the screen */
+    
+    memset(&timerSpec,0,sizeof(timerSpec));
+    
+    /* specify the timer timeout time */
+    timerSpec.it_value.tv_sec = 3;
+    timerSpec.it_value.tv_nsec = 0;
+    
+    /* set the new timer specs */
+    ret = timer_settime(timerId,0,&timerSpec,&timerSpecOld);
+    if(ret == -1)
+	{
+        printf("Error setting timer in %s!\n", __FUNCTION__);
+    }
+}
+
+
 
 void wipeScreen(union sigval signalArg)
 {

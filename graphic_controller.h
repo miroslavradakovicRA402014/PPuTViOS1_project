@@ -77,6 +77,12 @@ GraphicControllerError drawCnannel(int32_t channelNumber);
  * @return graphic controller error code
  */
 GraphicControllerError drawVolumeLevel(int32_t volumeLevel);
+/**
+ * @brief Draw info banner
+ *
+ * @return graphic controller error code
+ */
+GraphicControllerError drawInfoBanner(int32_t audioPid, int32_t videoPid);
 
 
 #endif /* __GRAPHIC_CONTROLLER_H__ */
