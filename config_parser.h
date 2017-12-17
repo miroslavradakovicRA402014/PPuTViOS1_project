@@ -13,18 +13,10 @@ typedef enum _ConfigErrorCode
 }ConfigErrorCode;
 
 /**
- * @brief Open config file
- *
- * @param [in] configFile - path to config file
- * @return file config descriptor or NULL
- */
-FILE* configOpen(char* configFile);
-
-/**
  * @brief Parse config file
  *
  * @param [in] configFile - path to config file
- * @param [out] config - config structure where config has been written in
+ * @param [out] config - config structure where config will be written in
  * @return config parser error
  */
 ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config);

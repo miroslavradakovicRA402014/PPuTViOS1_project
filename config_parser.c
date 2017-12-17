@@ -2,6 +2,8 @@
 #include "stream_controller.h"
 #include "config_parser.h"
 
+static FILE* configOpen(char* configFile);
+
 ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 {
 	FILE* fp = configOpen(configFile);
@@ -73,7 +75,6 @@ ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 
 	return CONFIG_PARSE_OK;
 }
-
 
 FILE* configOpen(char* configFile)
 {
