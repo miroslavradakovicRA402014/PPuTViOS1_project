@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 
+#define CONFIG_LINE_LEN 50
+#define CONFIG_VAL_LEN 8
+
 /**
  * @brief Enumeration of possible config parser error codes
  */
