@@ -424,7 +424,7 @@ void* streamControllerTask()
 	/* set program number to config program number */
 	if (config.configProgramNumber >= patTable->serviceInfoCount - 2)
 	{
-		printf("\nERROR Config channel doesn't exist\n");		
+		printf("\nERROR Config channel doesn't exist!\n");		
 		return (void*) SC_ERROR;				
  	}
 	programNumber = config.configProgramNumber;    
