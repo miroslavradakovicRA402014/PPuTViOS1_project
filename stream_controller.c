@@ -424,7 +424,7 @@ void* streamControllerTask()
 	/* set program number to config program number */
 	if (config.configProgramNumber > patTable->serviceInfoCount - 2)
 	{
-		printf("\nERROR Config channel doesn't exist\n");		
+		printf("\nERROR Config channel doesn't exist!\n");		
 		return (void*) SC_ERROR;				
  	}
 	programNumber = config.configProgramNumber;    
@@ -432,6 +432,19 @@ void* streamControllerTask()
 
     /* start current channel */
     startChannel(programNumber);
+    
+    /* check audio and video config pids*/
+    if (config.configAudioPid != currentChannel.audioPid)
+    {
+		printf("\nERROR Incompatabile audio pid!\n");  
+		config.configAudioPid = currentChannel.audioPid;   	
+    }
+    
+    if (config.configVideoPid != currentChannel.videoPid)
+    {
+		printf("\nERROR Incompatabile audio pid!\n");  
+		config.configVideoPid = currentChannel.videoPid;   	
+    }
     
     /* set isInitialized flag */
     isInitialized = true;
