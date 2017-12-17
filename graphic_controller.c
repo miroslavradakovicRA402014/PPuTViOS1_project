@@ -176,7 +176,7 @@ void drawProgram(int32_t keycode)
     sprintf(keycodeString,"%d",keycode);
     
     /* draw the string */
-    DFBCHECK(primary->SetColor(primary, 0x10, 0x80, 0x40, 0xff));
+    DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
 	DFBCHECK(primary->DrawString(primary, keycodeString, -1, 50+screenWidth/16, 50+screenHeight/16 + FONT_HEIGHT_CHANNEL/2, DSTF_CENTER));
     
     
@@ -324,7 +324,7 @@ void drawBanner(int32_t audioPid, int32_t videoPid)
     
     /* draw the string */
 
-    DFBCHECK(primary->SetColor(primary, 0x10, 0x80, 0x40, 0xff));
+    DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
 	DFBCHECK(primary->DrawString(primary, audioInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));
 	DFBCHECK(primary->DrawString(primary, videoInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL*3, DSTF_CENTER));    
     
