@@ -136,7 +136,7 @@ ConfigErrorCode parseAttribute(char* tag, char* value, InitConfig* config)
 int32_t getAttributeValue(char* value)
 {
 	int32_t attr;
-	int n = 0;
+	uint8_t n = 0;
 	char val[CONFIG_VAL_LEN]; 
 	
 	while ((value[n] >= 48 && value[n] <= 57))

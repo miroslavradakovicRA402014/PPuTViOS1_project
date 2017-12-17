@@ -118,7 +118,7 @@ StreamControllerError channelDown()
 {
     if (programNumber <= 0)
     {
-        programNumber = patTable->serviceInfoCount - 3;
+        programNumber = patTable->serviceInfoCount - 2;
     } 
     else
     {
@@ -422,7 +422,7 @@ void* streamControllerTask()
 
 
 	/* set program number to config program number */
-	if (config.configProgramNumber >= patTable->serviceInfoCount - 2)
+	if (config.configProgramNumber > patTable->serviceInfoCount - 2)
 	{
 		printf("\nERROR Config channel doesn't exist\n");		
 		return (void*) SC_ERROR;				
