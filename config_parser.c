@@ -1,8 +1,12 @@
 #include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include "stream_controller.h"
 #include "config_parser.h"
 
 static FILE* configOpen(char* configFile);
+static ConfigErrorCode parseAttribute(char* tag, char* value, InitConfig* config);
+static int32_t getAttributeValue(char* value);
 
 ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 {
@@ -13,53 +17,33 @@ ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 		return CONFIG_PARSE_ERROR;
 	}
 
-	char configModule[CONFIG_NAME_LEN];
-	char configAudioType[CONFIG_NAME_LEN];
-	char configVideoType[CONFIG_NAME_LEN];	
+	uint8_t i = 0;
 
-	fscanf(fp, "%d %d %d %d %d %s %s %s", 
-				&(config->configFreq), 
-				   &(config->configBandwidth), 	
-				      &(config->configAudioPid), 
-					     &(config->configVideoPid), 
-					        &(config->configProgramNumber),
-							   configModule,	 
-							      configAudioType, 
-								   	 configVideoType);
+	char configFileTag[CONFIG_LINE_LEN];
+	char configFileSeparator[CONFIG_LINE_LEN];	
+	char configFileValue[CONFIG_LINE_LEN];
 
-
-	if (!strcmp(configModule,"DVB_T2") || !strcmp(configModule,"dvb_t2"))
+	while (!feof(fp))
 	{
-		config->configModule = DVB_T2;
-	}
-	else if (!strcmp(configModule,"DVB_T") || !strcmp(configModule,"dvb_t"))
-	{
-		config->configModule = DVB_T;
-	}
-	else
-	{
-		printf("\nModule %s doesn't exist!\n", configModule);	
-		return CONFIG_PARSE_ERROR;
-	}
-
-	if (!strcmp(configAudioType,"AUDIO_TYPE_MPEG_AUDIO") || !strcmp(configAudioType,"audio_type_mpeg_audio"))
-	{
-		config->configAudioType = AUDIO_TYPE_MPEG_AUDIO;
-	}
-	else
-	{
-		printf("\nModule %s doesn't exist!\n", configAudioType);	
-		return CONFIG_PARSE_ERROR;
-	}
-
-	if (!strcmp(configVideoType,"VIDEO_TYPE_MPEG2") || !strcmp(configVideoType,"video_type_mpeg2"))
-	{
-		config->configVideoType = VIDEO_TYPE_MPEG2;
-	}
-	else
-	{
-		printf("\nModule %s doesn't exist!\n", configVideoType);	
-		return CONFIG_PARSE_ERROR;
+		if (i == 0)
+		{
+			fscanf(fp, "%s", configFileTag);
+			if (strcmp(configFileTag,"\n") != 0)
+			{
+				i++;
+			}
+		}
+		else if (i == 1)
+		{
+			i++;
+			fscanf(fp, "%s", configFileSeparator);		
+		}
+		else if (i == 2)
+		{
+			i = 0;
+			fscanf(fp, "%s", configFileValue);
+			parseAttribute(configFileTag, configFileValue, config);			
+		}
 	}
 	
 	printf("\nFrequency :%d", config->configFreq);
@@ -67,13 +51,106 @@ ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 	printf("\nAudio PID :%d", config->configAudioPid);		
 	printf("\nVideo PID :%d", config->configVideoPid);	
 	printf("\nProgram number :%d", config->configProgramNumber);	
-	printf("\nTV module :%s", configModule);
-	printf("\nAudio type :%s", configAudioType);
-	printf("\nVideo type :%s", configVideoType);
+	printf("\nTV module :%d", config->configModule);
+	printf("\nAudio type :%d", config->configAudioType);
+	printf("\nVideo type :%d", config->configVideoType);
 
 	fclose(fp);
 
 	return CONFIG_PARSE_OK;
+}
+
+ConfigErrorCode parseAttribute(char* tag, char* value, InitConfig* config)
+{
+	if (!strcmp(tag,"FREQUENCY"))
+	{
+		config->configFreq = getAttributeValue(value);
+	}
+	
+	if (!strcmp(tag,"BANDWIDTH"))
+	{
+		config->configBandwidth = getAttributeValue(value);
+	}
+	
+	if (!strcmp(tag,"AUDIO_PID"))
+	{
+		config->configAudioPid = getAttributeValue(value);
+	}
+	
+	if (!strcmp(tag,"VIDEO_PID"))
+	{
+		config->configVideoPid = getAttributeValue(value);
+	}
+	
+	if (!strcmp(tag,"PROGRAM_NUMBER"))
+	{
+		config->configProgramNumber = getAttributeValue(value);
+	}		
+	
+	if (!strcmp(tag,"TV_MODULE"))
+	{
+		if (!strcmp(value,"DVB_T2"))
+		{
+			config->configModule = DVB_T2;
+		}
+		else if (!strcmp(value,"DVB_T"))
+		{
+			config->configModule = DVB_T;
+		}
+		else
+		{
+			printf("\nModule %s doesn't exist!\n", value);	
+			return CONFIG_PARSE_ERROR;
+		}
+	}	
+  
+	if (!strcmp(tag,"AUDIO_TYPE"))
+	{
+		if (!strcmp(value,"AUDIO_TYPE_MPEG_AUDIO"))
+		{
+			config->configAudioType = AUDIO_TYPE_MPEG_AUDIO;
+		}
+		else
+		{
+			printf("\nModule %s doesn't exist!\n", value);	
+			return CONFIG_PARSE_ERROR;
+		}	
+	}  
+  
+	if (!strcmp(tag,"VIDEO_TYPE"))
+	{ 		
+	 	if (!strcmp(value,"VIDEO_TYPE_MPEG2"))
+		{
+			config->configVideoType = VIDEO_TYPE_MPEG2;
+		}
+		else
+		{
+			printf("\nModule %s doesn't exist!\n", value);	
+			return CONFIG_PARSE_ERROR;
+		}	
+	}
+	
+	return CONFIG_PARSE_OK;		
+}
+
+int32_t getAttributeValue(char* value)
+{
+	int32_t attr;
+	uint8_t n = 0;
+	char val[CONFIG_VAL_LEN]; 
+	
+	while ((value[n] >= 48 && value[n] <= 57))
+	{
+		n++;
+	}
+	
+	val[n] = '\0';
+
+	strncpy(val, value, n);
+
+	attr = atoi(val);
+	
+	return attr;
 }
 
 FILE* configOpen(char* configFile)

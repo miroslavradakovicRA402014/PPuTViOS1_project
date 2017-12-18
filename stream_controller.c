@@ -118,7 +118,7 @@ StreamControllerError channelDown()
 {
     if (programNumber <= 0)
     {
-        programNumber = patTable->serviceInfoCount - 3;
+        programNumber = patTable->serviceInfoCount - 2;
     } 
     else
     {
@@ -348,7 +348,7 @@ void* streamControllerTask()
 	   printf("\nERROR parseConfigFile() fail\n");		
 	   return (void*) SC_ERROR;		
 	}
-
+	
     /* lock to frequency */
     if(!Tuner_Lock_To_Frequency(config.configFreq, config.configBandwidth, config.configModule))
     {
@@ -422,7 +422,7 @@ void* streamControllerTask()
 
 
 	/* set program number to config program number */
-	if (config.configProgramNumber >= patTable->serviceInfoCount - 2)
+	if (config.configProgramNumber > patTable->serviceInfoCount - 2)
 	{
 		printf("\nERROR Config channel doesn't exist!\n");		
 		return (void*) SC_ERROR;				
@@ -432,6 +432,19 @@ void* streamControllerTask()
 
     /* start current channel */
     startChannel(programNumber);
+    
+    /* check audio and video config pids*/
+    if (config.configAudioPid != currentChannel.audioPid)
+    {
+		printf("\nERROR Incompatabile audio pid!\n");  
+		config.configAudioPid = currentChannel.audioPid;   	
+    }
+    
+    if (config.configVideoPid != currentChannel.videoPid)
+    {
+		printf("\nERROR Incompatabile audio pid!\n");  
+		config.configVideoPid = currentChannel.videoPid;   	
+    }
     
     /* set isInitialized flag */
     isInitialized = true;
