@@ -22,7 +22,6 @@ static pthread_t gcThread;
 
 static void* graphicControllerTask();
 static void wipeScreen(union sigval signalArg);
-static void drawBlackScreen();
 static void drawProgram(int32_t keycode);
 static void drawVolumeSymbol(int32_t volumeLevel);
 static void drawBanner(int32_t audioPid, int32_t videoPid);
@@ -351,34 +350,6 @@ void refreshScreen()
     
     /* update screen */
     DFBCHECK(primary->Flip(primary, NULL, 0));
-}
-
-void drawBlackScreen()
-{
-    int32_t ret;
-
-    /* clear screen */
-    DFBCHECK(primary->SetColor(primary, 0x00, 0x00, 0x00, 0xff));
-    DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
-    
-    /* update screen */
-    DFBCHECK(primary->Flip(primary, NULL, 0));
-    
-    /* set the timer for clearing the screen */
-    
-    memset(&timerSpec,0,sizeof(timerSpec));
-    
-    /* specify the timer timeout time */
-    timerSpec.it_value.tv_sec = 3;
-    timerSpec.it_value.tv_nsec = 0;
-    
-    /* set the new timer specs */
-    ret = timer_settime(timerId,0,&timerSpec,&timerSpecOld);
-    if(ret == -1)
-	{
-        printf("Error setting timer in %s!\n", __FUNCTION__);
-    }
-
 }
 
 void wipeScreen(union sigval signalArg)
