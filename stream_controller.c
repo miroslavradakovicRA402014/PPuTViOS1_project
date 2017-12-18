@@ -349,12 +349,6 @@ void* streamControllerTask()
 	   return (void*) SC_ERROR;		
 	}
 	
-	if (config.configFreq != 754000000)
-	{
-	   printf("\nERROR Frequency doesn't exist!\n");		
-	   return (void*) SC_ERROR;		
-	}
-
     /* lock to frequency */
     if(!Tuner_Lock_To_Frequency(config.configFreq, config.configBandwidth, config.configModule))
     {
