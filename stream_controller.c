@@ -1,6 +1,7 @@
 #include "stream_controller.h"
 #include "tables.h"
 #include "config_parser.h"
+#include "graphic_controller.h"
 #include <string.h>
 
 static PatTable *patTable;
@@ -297,9 +298,13 @@ void startChannel(int32_t channelNumber)
     }
     
     /* store current channel info */
-    currentChannel.programNumber = channelNumber + 1;
+    currentChannel.programNumber = channelNumber;
     currentChannel.audioPid = audioPid;
     currentChannel.videoPid = videoPid;
+
+	sleep(3.5);
+	drawCnannel(currentChannel.programNumber);
+	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid);
 }
 
 void* streamControllerTask()

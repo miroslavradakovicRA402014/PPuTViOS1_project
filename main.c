@@ -98,12 +98,10 @@ void remoteControllerCallback(uint16_t code, uint16_t type, uint32_t value)
 		case KEYCODE_P_PLUS:
 			printf("\nCH+ pressed\n");
             channelUp();
-			drawCnannel(currentChannel.programNumber);
 			break;
 		case KEYCODE_P_MINUS:
 		    printf("\nCH- pressed\n");
             channelDown();
-			drawCnannel(currentChannel.programNumber);
 			break;
 		case KEYCODE_V_PLUS:
 			printf("\nVOL+ pressed\n");
@@ -133,13 +131,11 @@ void remoteControllerCallback(uint16_t code, uint16_t type, uint32_t value)
 				{
 					printf("\nNumber %d pressed\n", code - 1);
 					channelSwitch(code - 1);
-					drawCnannel(currentChannel.programNumber);
 				}
 				else
 				{
 					printf("\nNumber 0 pressed\n");
 					channelSwitch(0);
-					drawCnannel(currentChannel.programNumber);
 				}
 			}
 			else

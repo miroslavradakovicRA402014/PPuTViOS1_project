@@ -48,7 +48,8 @@ typedef struct _ScreenState
 	bool drawChannel;
 	bool drawVolumeChange; 
 	bool drawInfo;
-	bool wipeScreen;
+	bool drawBlackScreen;
+	bool refreshScreen;
 }ScreenState;
 
 
