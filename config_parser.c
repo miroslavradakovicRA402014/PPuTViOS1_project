@@ -62,7 +62,7 @@ ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 
 ConfigErrorCode parseAttribute(char* tag, char* value, InitConfig* config)
 {
-	if (!strcmp(tag,"FREAQUENCY"))
+	if (!strcmp(tag,"FREQUENCY"))
 	{
 		config->configFreq = getAttributeValue(value);
 	}
