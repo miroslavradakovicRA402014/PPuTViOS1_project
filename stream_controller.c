@@ -39,7 +39,7 @@ static pthread_mutex_t demuxMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 static void* streamControllerTask();
-static void startChannel(int32_t channelNumber);
+static StreamControllerError startChannel(int32_t channelNumber);
 
 
 StreamControllerError streamControllerInit(char* configFile)
@@ -223,9 +223,8 @@ StreamControllerError getChannelInfo(ChannelInfo* channelInfo)
  * Parses current channel PMT table when it arrives
  * Creates streams with current channel audio and video pids
  */
-void startChannel(int32_t channelNumber)
+StreamControllerError startChannel(int32_t channelNumber)
 {
-    
     /* free PAT table filter */
     Demux_Free_Filter(playerHandle, filterHandle);
     
@@ -233,7 +232,7 @@ void startChannel(int32_t channelNumber)
     if(Demux_Set_Filter(playerHandle, patTable->patServiceInfoArray[channelNumber + 1].pid, 0x02, &filterHandle))
 	{
 		printf("\n%s : ERROR Demux_Set_Filter() fail\n", __FUNCTION__);
-        return;
+        return SC_ERROR;
 	}
     
     /* wait for a PMT table to be parsed*/
@@ -255,11 +254,23 @@ void startChannel(int32_t channelNumber)
             && (videoPid == -1))
         {
             videoPid = pmtTable->pmtElementaryInfoArray[i].elementaryPid;
+			/* check video config pids*/
+			if (config.configVideoPid != videoPid && !isInitialized)
+			{
+				printf("\nERROR Incompatabile video pid!\n"); 
+				return SC_ERROR;  	
+			}
         } 
         else if (((pmtTable->pmtElementaryInfoArray[i].streamType == 0x3) || (pmtTable->pmtElementaryInfoArray[i].streamType == 0x4))
             && (audioPid == -1))
         {
             audioPid = pmtTable->pmtElementaryInfoArray[i].elementaryPid;
+			/* check audio config pids*/
+			if (config.configAudioPid != audioPid && !isInitialized)
+			{
+				printf("\nERROR Incompatabile audio pid!\n");
+  				return SC_ERROR; 	
+			}
         }
     }
 
@@ -302,9 +313,11 @@ void startChannel(int32_t channelNumber)
     currentChannel.audioPid = audioPid;
     currentChannel.videoPid = videoPid;
 
-	sleep(3.5);
+	sleep(3.7);
 	drawCnannel(currentChannel.programNumber);
 	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid);
+
+	return SC_NO_ERROR;
 }
 
 void* streamControllerTask()
@@ -434,23 +447,9 @@ void* streamControllerTask()
  	}
 	programNumber = config.configProgramNumber;    
 
-
-    /* start current channel */
+    /* start current channel if pid correct */
     startChannel(programNumber);
-    
-    /* check audio and video config pids*/
-    if (config.configAudioPid != currentChannel.audioPid)
-    {
-		printf("\nERROR Incompatabile audio pid!\n");  
-		config.configAudioPid = currentChannel.audioPid;   	
-    }
-    
-    if (config.configVideoPid != currentChannel.videoPid)
-    {
-		printf("\nERROR Incompatabile audio pid!\n");  
-		config.configVideoPid = currentChannel.videoPid;   	
-    }
-    
+	        
     /* set isInitialized flag */
     isInitialized = true;
 
