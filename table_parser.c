@@ -299,3 +299,166 @@ ParseErrorCode printPmtTable(PmtTable* pmtTable)
     return TABLES_PARSE_OK;
 }
 
+ParseErrorCode parseEitHeader(const uint8_t* eitHeaderBuffer, EitTableHeader* eitHeader)
+{    
+    if(eitHeaderBuffer==NULL || eitHeader==NULL)
+    {
+        printf("\n%s : ERROR received parameters are not ok\n", __FUNCTION__);
+        return TABLES_PARSE_ERROR;
+    }
+
+    eitHeader->tableId = (uint8_t)* eitHeaderBuffer; 
+    if (eitHeader->tableId != 0x4E)
+    {
+        printf("\n%s : ERROR it is not a EIT Table\n", __FUNCTION__);
+        return TABLES_PARSE_ERROR;
+    }
+    
+    uint8_t lower8Bits = 0;
+    uint8_t higher8Bits = 0;
+    uint16_t all16Bits = 0;
+    
+    lower8Bits = (uint8_t)(*(eitHeaderBuffer + 1));
+    lower8Bits = lower8Bits >> 7;
+    eitHeader->sectionSyntaxIndicator = lower8Bits & 0x01;
+
+    higher8Bits = (uint8_t) (*(eitHeaderBuffer + 1));
+    lower8Bits = (uint8_t) (*(eitHeaderBuffer + 2));
+    all16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
+    eitHeader->sectionLength = all16Bits & 0x0FFF;
+    
+    eitHeader->serviceId  = (uint16_t) (*(eitHeaderBuffer + 3));;
+    
+    lower8Bits = (uint8_t) (*(eitHeaderBuffer + 5));
+    lower8Bits = lower8Bits >> 1;
+    eitHeader->versionNumber = lower8Bits & 0x1F;
+
+    lower8Bits = (uint8_t) (*(eitHeaderBuffer + 5));
+    eitHeader->currentNextIndicator = lower8Bits & 0x01;
+
+    eitHeader->sectionNumber = (uint8_t) (*(eitHeaderBuffer + 6));
+	eitHeader->lastSectionNumber = (uint8_t) (*(eitHeaderBuffer + 7));
+	eitHeader->transportStreamId = (uint16_t) (*(eitHeaderBuffer + 8));
+	eitHeader->originalNetworkId = (uint16_t) (*(eitHeaderBuffer + 10));
+	eitHeader->segmentLastSectionNumber = (uint8_t) (*(eitHeaderBuffer + 12));
+	eitHeader->lastTableId = (uint8_t) (*(eitHeaderBuffer + 13));
+
+    return TABLES_PARSE_OK;
+}
+
+ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo* eitEventInfo)
+{
+    if(eitEventInfoBuffer==NULL || eitEventInfo==NULL)
+    {
+        printf("\n%s : ERROR received parameters are not ok\n", __FUNCTION__);
+        return TABLES_PARSE_ERROR;
+    }
+    
+    uint8_t lower8Bits = 0;
+    uint8_t higher8Bits = 0;
+    uint16_t all16Bits = 0;
+
+	uint32_t lower32Bits = 0;
+    uint32_t higher32Bits = 0;
+    uint64_t all64Bits = 0;
+	   
+	eitEventInfo->eventId = (uint16_t)(*eitEventInfoBuffer);
+
+	higher32Bits = (uint32_t) (*(eitEventInfoBuffer + 1));
+    lower32Bits = (uint32_t) (*(eitEventInfoBuffer + 5));
+    all64Bits = ((uint64_t)higher32Bits << 32LL) + (uint64_t)lower32Bits;
+    eitEventInfo->startTime = (uint64_t)(all64Bits & 0xFFFFFFFFFF000000);
+	eitEventInfo->duration = (uint32_t)(all64Bits &  0x0000000000FFFFFF);
+
+	higher8Bits = (uint8_t) (*(eitEventInfoBuffer + 9));
+    lower8Bits = (uint8_t) (*(eitEventInfoBuffer + 10));
+    all16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
+    eitEventInfo->runningStatus = (uint8_t)(all16Bits & 0xE000);
+	eitEventInfo->CAmode = (uint8_t)(all16Bits & 0x1000);
+	eitEventInfo->descriptorsLoopLength = all16Bits & 0x0FFF;
+
+    return TABLES_PARSE_OK;
+}
+
+ParseErrorCode parseEitTable(const uint8_t* eitSectionBuffer, EitTable* eitTable)
+{
+    uint8_t* currentBufferPosition = NULL;
+    uint32_t parsedLength = 0;
+    
+    if(eitSectionBuffer==NULL || eitTable==NULL)
+    {
+        printf("\n%s : ERROR received parameters are not ok\n", __FUNCTION__);
+        return TABLES_PARSE_ERROR;
+    }
+    
+    if(parseEitHeader(eitSectionBuffer,&(eitTable->eitHeader))!=TABLES_PARSE_OK)
+    {
+        printf("\n%s : ERROR parsing EIT header\n", __FUNCTION__);
+        return TABLES_PARSE_ERROR;
+    }
+    
+    parsedLength = 14 /*EIT header size*/ + 4 /*CRC size*/ - 3 /*Not in section length*/;
+    currentBufferPosition = (uint8_t *)(eitSectionBuffer + 14); 
+    eitTable->eventInfoCount = 0; /* Number of info presented in EIT table */
+    
+    while(parsedLength < eitTable->eitHeader.sectionLength)
+    {
+        if(eitTable->eventInfoCount > TABLES_MAX_NUMBER_OF_EVENTS - 1)
+        {
+            printf("\n%s : ERROR there is not enough space in EIT structure for elementary info\n", __FUNCTION__);
+            return TABLES_PARSE_ERROR;
+        }
+        
+        if(parseEitEventInfo(currentBufferPosition, &(eitTable->eitInfoArray[eitTable->eventInfoCount])) == TABLES_PARSE_OK)
+        {
+            currentBufferPosition += 8 + eitTable->eitInfoArray[eitTable->eventInfoCount].descriptorsLoopLength ; 
+           	parsedLength += 8 + eitTable->eitInfoArray[eitTable->eventInfoCount].descriptorsLoopLength; /* Size from stream type to elementary info descriptor */
+            eitTable->eventInfoCount++;
+        }    
+    }
+
+    return TABLES_PARSE_OK;
+}
+
+ParseErrorCode printEitTable(EitTable* eitTable)
+{
+    uint8_t i=0;
+    
+    if(eitTable==NULL)
+    {
+        printf("\n%s : ERROR received parameter is not ok\n", __FUNCTION__);
+        return TABLES_PARSE_ERROR;
+    }
+    
+    printf("\n********************EIT TABLE SECTION********************\n");
+    printf("table_id                 |      %d\n",eitTable->eitHeader.tableId);
+    printf("section_syntax_indicator |      %d\n",eitTable->eitHeader.sectionSyntaxIndicator);
+    printf("section_length           |      %d\n",eitTable->eitHeader.sectionLength);
+    printf("service_id               |      %d\n",eitTable->eitHeader.serviceId);
+    printf("versionNumber            |      %d\n",eitTable->eitHeader.versionNumber);
+    printf("current_next_indicator   |      %d\n",eitTable->eitHeader.currentNextIndicator);
+	printf("section_number    		 |      %d\n",eitTable->eitHeader.sectionNumber);
+	printf("last_section_number      |      %d\n",eitTable->eitHeader.lastSectionNumber);
+	printf("transport_stream_id      |      %d\n",eitTable->eitHeader.transportStreamId);
+	printf("original_network_id      |      %d\n",eitTable->eitHeader.originalNetworkId);
+	printf("segment_last_section     |      %d\n",eitTable->eitHeader.segmentLastSectionNumber);
+	printf("last_table_id       	 |      %d\n",eitTable->eitHeader.lastTableId);
+    
+    for (i=0; i<eitTable->eventInfoCount;i++)
+    {
+        printf("-----------------------------------------\n");
+        printf("event_id                |      %d\n",eitTable->eitInfoArray[i].eventId);
+		printf("start_time              |      %ld\n",eitTable->eitInfoArray[i].startTime);
+		printf("duration                |      %d\n",eitTable->eitInfoArray[i].duration);
+		printf("running_status          |      %d\n",eitTable->eitInfoArray[i].runningStatus);
+		printf("CA_mode                 |      %ld\n",eitTable->eitInfoArray[i].CAmode);
+		printf("descriptors_loop_length |      %ld\n",eitTable->eitInfoArray[i].descriptorsLoopLength);
+    }
+    printf("\n********************EIT TABLE SECTION********************\n");
+    
+    return TABLES_PARSE_OK;
+}
+
+
+
+

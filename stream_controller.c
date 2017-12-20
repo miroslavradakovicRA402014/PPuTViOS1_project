@@ -290,6 +290,15 @@ StreamControllerError startChannel(int32_t channelNumber)
             streamControllerDeinit();
         }
     }
+	else
+	{
+        /* remove previos audio stream */
+        if (streamHandleA != 0)
+        {
+            Player_Stream_Remove(playerHandle, sourceHandle, streamHandleA);
+            streamHandleA = 0;
+        }
+	}
 
     if (audioPid != -1)
     {   
@@ -313,7 +322,7 @@ StreamControllerError startChannel(int32_t channelNumber)
     currentChannel.audioPid = audioPid;
     currentChannel.videoPid = videoPid;
 
-	sleep(4);
+	sleep(3.8);
 	drawCnannel(currentChannel.programNumber);
 	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid);
 
