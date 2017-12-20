@@ -313,7 +313,7 @@ StreamControllerError startChannel(int32_t channelNumber)
     currentChannel.audioPid = audioPid;
     currentChannel.videoPid = videoPid;
 
-	sleep(3.8);
+	sleep(4);
 	drawCnannel(currentChannel.programNumber);
 	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid);
 
