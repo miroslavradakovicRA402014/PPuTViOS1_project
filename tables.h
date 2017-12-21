@@ -127,8 +127,8 @@ typedef struct _EitEventInfo
 typedef struct _EitTable
 {    
     EitTableHeader eitHeader;                                                     /* EIT Table Header */
-    EitEventInfo eitInfoArray[TABLES_MAX_NUMBER_OF_EVENTS];    /* Services info presented in EIT table */
-    uint8_t eventInfoCount;                                                /* Number of services info presented in EIT table */
+    EitEventInfo eitInfoArray[TABLES_MAX_NUMBER_OF_EVENTS];    /* Event info presented in EIT table */
+    uint8_t eventInfoCount;                                                /* Number of events info presented in EIT table */
 }EitTable;
 
 

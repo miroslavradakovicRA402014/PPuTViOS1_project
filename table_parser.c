@@ -397,7 +397,7 @@ ParseErrorCode parseEitTable(const uint8_t* eitSectionBuffer, EitTable* eitTable
         return TABLES_PARSE_ERROR;
     }
     
-    parsedLength = 14 /*EIT header size*/ + 4 /*CRC size*/ - 3 /*Not in section length*/;
+    parsedLength = 14 /*EIT header size*/ + 4/*CRC size*/ - 3 /*Not in section length*/;
     currentBufferPosition = (uint8_t *)(eitSectionBuffer + 14); 
     eitTable->eventInfoCount = 0; /* Number of info presented in EIT table */
     
@@ -411,8 +411,8 @@ ParseErrorCode parseEitTable(const uint8_t* eitSectionBuffer, EitTable* eitTable
         
         if(parseEitEventInfo(currentBufferPosition, &(eitTable->eitInfoArray[eitTable->eventInfoCount])) == TABLES_PARSE_OK)
         {
-            currentBufferPosition += 8 + eitTable->eitInfoArray[eitTable->eventInfoCount].descriptorsLoopLength ; 
-           	parsedLength += 8 + eitTable->eitInfoArray[eitTable->eventInfoCount].descriptorsLoopLength; /* Size from stream type to elementary info descriptor */
+            currentBufferPosition += 12 + eitTable->eitInfoArray[eitTable->eventInfoCount].descriptorsLoopLength ; 
+           	parsedLength += 12 + eitTable->eitInfoArray[eitTable->eventInfoCount].descriptorsLoopLength;
             eitTable->eventInfoCount++;
         }    
     }
@@ -448,7 +448,7 @@ ParseErrorCode printEitTable(EitTable* eitTable)
     {
         printf("-----------------------------------------\n");
         printf("event_id                |      %d\n",eitTable->eitInfoArray[i].eventId);
-		printf("start_time              |      %ld\n",eitTable->eitInfoArray[i].startTime);
+		printf("start_time              |      %llx\n",eitTable->eitInfoArray[i].startTime);
 		printf("duration                |      %d\n",eitTable->eitInfoArray[i].duration);
 		printf("running_status          |      %d\n",eitTable->eitInfoArray[i].runningStatus);
 		printf("CA_mode                 |      %ld\n",eitTable->eitInfoArray[i].CAmode);

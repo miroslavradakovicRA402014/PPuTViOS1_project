@@ -356,22 +356,12 @@ void wipeScreen(union sigval signalArg)
 {
 	printf("Screen wiping!\n");
 
-    int32_t ret;
-
     /* clear screen */
     DFBCHECK(primary->SetColor(primary, 0x00, 0x00, 0x00, 0x00));
     DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
     
     /* update screen */
-    DFBCHECK(primary->Flip(primary, NULL, 0));
-    
-    /* stop the timer */
-    memset(&timerSpec,0,sizeof(timerSpec));
-    ret = timer_settime(timerId,0,&timerSpec,&timerSpecOld);
-    if(ret == -1)
-	{
-        printf("Error setting timer in %s!\n", __FUNCTION__);
-    }
+    DFBCHECK(primary->Flip(primary, NULL, 0));  
 }
 
 

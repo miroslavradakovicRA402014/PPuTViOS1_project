@@ -17,6 +17,9 @@
 
 #define MAX_VOL_LEVEL 10
 
+#define MAX_EVENT_LEN 10
+
+
 /**
  * @brief Structure that defines stream controller error
  */
@@ -35,6 +38,9 @@ typedef struct _ChannelInfo
     int16_t programNumber;
     int16_t audioPid;
     int16_t videoPid;
+	bool teletext;
+	char eventTime[MAX_EVENT_LEN];
+	char eventName[MAX_EVENT_LEN];
 }ChannelInfo;
 
 /**
