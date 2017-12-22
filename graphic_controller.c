@@ -15,6 +15,7 @@ static int32_t volumeLevelRender = 0;
 static int32_t audioPidRender = 0;
 static int32_t videoPidRender = 0;
 static int32_t teletextRender = 0;
+static char timeRender[6];
 
 static struct itimerspec timerSpec;
 static struct itimerspec timerSpecOld;
@@ -25,7 +26,7 @@ static void* graphicControllerTask();
 static void wipeScreen(union sigval signalArg);
 static void drawProgram(int32_t keycode);
 static void drawVolumeSymbol(int32_t volumeLevel);
-static void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext);
+static void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time);
 static void refreshScreen();
 
 
@@ -78,11 +79,12 @@ GraphicControllerError drawVolumeLevel(int32_t volumeLevel)
 	state.drawVolumeChange = true;
 }
 
-GraphicControllerError drawInfoBanner(int32_t audioPid, int32_t videoPid, bool teletext)
+GraphicControllerError drawInfoBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time)
 {
 	audioPidRender = audioPid;
 	videoPidRender = videoPid;
-	teletextRender = teletextl
+	teletextRender = teletext;
+	strncpy(timeRender,time,6);
 	state.drawInfo = true;	
 }
 
@@ -141,7 +143,7 @@ static void* graphicControllerTask()
 		{
 			refreshScreen();
 			printf("Draw banner!\n");
-			drawBanner(audioPidRender, videoPidRender, teletextRender);
+			drawBanner(audioPidRender, videoPidRender, teletextRender, timeRender);
 			state.drawInfo = false;
 		}
 
@@ -281,7 +283,7 @@ void drawVolumeSymbol(int32_t volumeLevel)
 }
 
 
-void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext)
+void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time)
 {
     int32_t ret;
 
@@ -292,6 +294,7 @@ void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext)
 	char audioPidStr[5];
 	char videoPidStr[5];
 	char txtInfo[8];
+	char timeInfo[6];
 	
 	
 	strcpy(audioInfo, "Audio PID: ");
@@ -326,14 +329,16 @@ void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext)
     {
     	strcpy(txtInfo, "NO TXT");
     }
-    
+    /* generate time string */
+	strncpy(timeInfo, time,6);
+	
     /* draw the string */
 
     DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
 	DFBCHECK(primary->DrawString(primary, audioInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));
-	DFBCHECK(primary->DrawString(primary, videoInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL*3, DSTF_CENTER));    
+	DFBCHECK(primary->DrawString(primary, videoInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
 	DFBCHECK(primary->DrawString(primary, txtInfo, -1, screenWidth-200, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
-    
+    DFBCHECK(primary->DrawString(primary, timeInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + 4*FONT_HEIGHT_CHANNEL, DSTF_CENTER));
     
     /* update screen */
     DFBCHECK(primary->Flip(primary, NULL, 0));

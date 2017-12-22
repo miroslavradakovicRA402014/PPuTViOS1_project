@@ -83,7 +83,7 @@ GraphicControllerError drawVolumeLevel(int32_t volumeLevel);
  *
  * @return graphic controller error code
  */
-GraphicControllerError drawInfoBanner(int32_t audioPid, int32_t videoPid, bool teletext);
+GraphicControllerError drawInfoBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time);
 
 
 #endif /* __GRAPHIC_CONTROLLER_H__ */

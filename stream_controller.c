@@ -93,7 +93,8 @@ StreamControllerError streamControllerDeinit()
     /* free allocated memory */  
     free(patTable);
     free(pmtTable);
-    
+	free(eitTable);    
+
     /* set isInitialized flag */
     isInitialized = false;
 
@@ -342,9 +343,9 @@ StreamControllerError startChannel(int32_t channelNumber)
     currentChannel.videoPid = videoPid;
 	currentChannel.teletext = hasTeletext; 
 
-	sleep(3.9);
+	sleep(4);
 	drawCnannel(currentChannel.programNumber);
-	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext);
+	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext,  currentChannel.eventTime);
 
 	return SC_NO_ERROR;
 }
@@ -554,7 +555,12 @@ int32_t sectionReceivedCallback(uint8_t *buffer)
 		printf("\n%s -----EIT TABLE ARRIVED-----\n",__FUNCTION__);		
 		if(parseEitTable(buffer,eitTable)==TABLES_PARSE_OK)
         {
-            printEitTable(eitTable);
+			if ((pmtTable->pmtHeader).programNumber == (eitTable->eitHeader).serviceId)
+			{			
+				getEventTime();
+				printf("Event name %s\n",eitTable->eitInfoArray[0].eventName);
+				printf("New time arrived\n");
+			} 
 			/*
             pthread_mutex_lock(&demuxMutex);
 		    pthread_cond_signal(&demuxCond);
@@ -584,13 +590,39 @@ int32_t tunerStatusCallback(t_LockStatus status)
     return 0;
 }
 
-static void getEventTime()
+void getEventTime()
 {
-	uint32_t time = (uint32_t)eitTable->eitInfoArray[0].startTime;
+	uint32_t time = eitTable->eitInfoArray[0].startTime;
+	uint32_t mask = 0x0000F000;
+	uint16_t num;
 	char parsed_time[MAX_EVENT_LEN]; 
-	uint8_t i;	
+	uint8_t i;
+	uint8_t j;
+	uint8_t k = 0;
 
-	printf("\nEvent time %x\n", time);	
+	//printf("Start time %lx\n",time);
+
+	for (i = 0; i <  2; i++)
+	{
+		for (j = 0; j < 2; j++,k++)
+		{
+			num = time & mask;
+			mask >>= 4;
+			num >>= (12 - 4 * (i*2 + j));
+			if (k == 2)
+			{
+				parsed_time[k] = ':';
+				parsed_time[++k] = num + '0';
+			}
+			else
+			{
+				parsed_time[k] = num + '0';
+			}
+		}
+	}
+	parsed_time[5] = '\0';
+	
+	strncpy(currentChannel.eventTime,parsed_time,6);	
 }
 
 

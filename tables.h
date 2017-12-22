@@ -8,6 +8,7 @@
 #define TABLES_MAX_NUMBER_OF_PIDS_IN_PAT    20 	    /* Max number of PMT pids in one PAT table */
 #define TABLES_MAX_NUMBER_OF_ELEMENTARY_PID 20      /* Max number of elementary pids in one PMT table */
 #define TABLES_MAX_NUMBER_OF_EVENTS		    20 		/* Max number of events in one EIT table */
+#define TABLES_MAX_NAME_LEN				    20 
 
 /**
  * @brief Enumeration of possible tables parser error codes
@@ -114,11 +115,12 @@ typedef struct _EitTableHeader
 typedef struct _EitEventInfo
 {
     uint16_t eventId;
-    uint64_t startTime;
+    uint32_t startTime;
     uint32_t duration;
 	uint8_t runningStatus;
 	uint8_t CAmode;
 	uint16_t descriptorsLoopLength;
+	char eventName[TABLES_MAX_NAME_LEN];
 }EitEventInfo;
 
 /**

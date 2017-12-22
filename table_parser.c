@@ -327,8 +327,11 @@ ParseErrorCode parseEitHeader(const uint8_t* eitHeaderBuffer, EitTableHeader* ei
     all16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
     eitHeader->sectionLength = all16Bits & 0x0FFF;
     
-    eitHeader->serviceId  = (uint16_t) (*(eitHeaderBuffer + 3));;
-    
+   	higher8Bits = (uint8_t) (*(eitHeaderBuffer + 3));
+   	lower8Bits = (uint8_t) (*(eitHeaderBuffer + 4));
+  	all16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
+	eitHeader->serviceId = all16Bits;    
+
     lower8Bits = (uint8_t) (*(eitHeaderBuffer + 5));
     lower8Bits = lower8Bits >> 1;
     eitHeader->versionNumber = lower8Bits & 0x1F;
@@ -338,8 +341,17 @@ ParseErrorCode parseEitHeader(const uint8_t* eitHeaderBuffer, EitTableHeader* ei
 
     eitHeader->sectionNumber = (uint8_t) (*(eitHeaderBuffer + 6));
 	eitHeader->lastSectionNumber = (uint8_t) (*(eitHeaderBuffer + 7));
-	eitHeader->transportStreamId = (uint16_t) (*(eitHeaderBuffer + 8));
-	eitHeader->originalNetworkId = (uint16_t) (*(eitHeaderBuffer + 10));
+
+	higher8Bits = (uint8_t) (*(eitHeaderBuffer + 8));
+    lower8Bits = (uint8_t) (*(eitHeaderBuffer + 9));
+	all16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
+	eitHeader->transportStreamId = all16Bits;
+
+	higher8Bits = (uint8_t) (*(eitHeaderBuffer + 10));
+    lower8Bits = (uint8_t) (*(eitHeaderBuffer + 11));
+	all16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
+	eitHeader->transportStreamId = all16Bits;
+
 	eitHeader->segmentLastSectionNumber = (uint8_t) (*(eitHeaderBuffer + 12));
 	eitHeader->lastTableId = (uint8_t) (*(eitHeaderBuffer + 13));
 
@@ -354,21 +366,31 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
         return TABLES_PARSE_ERROR;
     }
     
+	uint8_t i;
+	uint8_t offset;
+	uint8_t eventNameLen = 0;
     uint8_t lower8Bits = 0;
     uint8_t higher8Bits = 0;
     uint16_t all16Bits = 0;
+	uint16_t higher16Bits = 0;
+	uint16_t lower16Bits = 0;
+	uint32_t all32Bits = 0;
 
-	uint32_t lower32Bits = 0;
-    uint32_t higher32Bits = 0;
-    uint64_t all64Bits = 0;
-	   
-	eitEventInfo->eventId = (uint16_t)(*eitEventInfoBuffer);
+	higher8Bits = (uint8_t) (*eitEventInfoBuffer);
+    lower8Bits = (uint8_t) (*(eitEventInfoBuffer + 1));
+	all16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
+	eitEventInfo->eventId = all16Bits;
 
-	higher32Bits = (uint32_t) (*(eitEventInfoBuffer + 2));
-    lower32Bits = (uint32_t) (*(eitEventInfoBuffer + 6));
-    all64Bits = ((uint64_t)higher32Bits << 32LL) + (uint64_t)lower32Bits;
-    eitEventInfo->startTime = (uint64_t)(all64Bits & 0xFFFFFFFFFF000000);
-	eitEventInfo->duration = (uint32_t)(all64Bits &  0x0000000000FFFFFF);
+	higher8Bits = (uint8_t) (*(eitEventInfoBuffer + 2));
+    lower8Bits = (uint8_t) (*(eitEventInfoBuffer + 3));
+	higher16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);	
+
+	higher8Bits = (uint8_t) (*(eitEventInfoBuffer + 4));
+    lower8Bits = (uint8_t) (*(eitEventInfoBuffer + 5));
+	lower16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
+
+	all32Bits = (uint16_t) ((higher16Bits << 16) + lower16Bits);
+	eitEventInfo->startTime = all32Bits;
 
 	higher8Bits = (uint8_t) (*(eitEventInfoBuffer + 10));
     lower8Bits = (uint8_t) (*(eitEventInfoBuffer + 11));
@@ -376,6 +398,19 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
     eitEventInfo->runningStatus = (uint8_t)(all16Bits & 0xE000);
 	eitEventInfo->CAmode = (uint8_t)(all16Bits & 0x1000);
 	eitEventInfo->descriptorsLoopLength = all16Bits & 0x0FFF;
+
+	offset = 12;
+
+	eventNameLen = (uint8_t) (*(eitEventInfoBuffer + offset + 5));
+
+	offset += 5;
+
+	for (i = 0; i < eventNameLen; i++)
+	{
+		eitEventInfo->eventName[i] = (*(eitEventInfoBuffer + offset + i)) ;
+	}	
+	eitEventInfo->eventName[i] = '\0';
+
 
     return TABLES_PARSE_OK;
 }
@@ -396,7 +431,7 @@ ParseErrorCode parseEitTable(const uint8_t* eitSectionBuffer, EitTable* eitTable
         printf("\n%s : ERROR parsing EIT header\n", __FUNCTION__);
         return TABLES_PARSE_ERROR;
     }
-    
+
     parsedLength = 14 /*EIT header size*/ + 4/*CRC size*/ - 3 /*Not in section length*/;
     currentBufferPosition = (uint8_t *)(eitSectionBuffer + 14); 
     eitTable->eventInfoCount = 0; /* Number of info presented in EIT table */
