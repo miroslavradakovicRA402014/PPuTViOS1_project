@@ -364,14 +364,14 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
 	   
 	eitEventInfo->eventId = (uint16_t)(*eitEventInfoBuffer);
 
-	higher32Bits = (uint32_t) (*(eitEventInfoBuffer + 1));
-    lower32Bits = (uint32_t) (*(eitEventInfoBuffer + 5));
+	higher32Bits = (uint32_t) (*(eitEventInfoBuffer + 2));
+    lower32Bits = (uint32_t) (*(eitEventInfoBuffer + 6));
     all64Bits = ((uint64_t)higher32Bits << 32LL) + (uint64_t)lower32Bits;
     eitEventInfo->startTime = (uint64_t)(all64Bits & 0xFFFFFFFFFF000000);
 	eitEventInfo->duration = (uint32_t)(all64Bits &  0x0000000000FFFFFF);
 
-	higher8Bits = (uint8_t) (*(eitEventInfoBuffer + 9));
-    lower8Bits = (uint8_t) (*(eitEventInfoBuffer + 10));
+	higher8Bits = (uint8_t) (*(eitEventInfoBuffer + 10));
+    lower8Bits = (uint8_t) (*(eitEventInfoBuffer + 11));
     all16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
     eitEventInfo->runningStatus = (uint8_t)(all16Bits & 0xE000);
 	eitEventInfo->CAmode = (uint8_t)(all16Bits & 0x1000);
@@ -431,7 +431,7 @@ ParseErrorCode printEitTable(EitTable* eitTable)
     }
     
     printf("\n********************EIT TABLE SECTION********************\n");
-    printf("table_id                 |      %d\n",eitTable->eitHeader.tableId);
+    printf("table_id                 |      %x\n",eitTable->eitHeader.tableId);
     printf("section_syntax_indicator |      %d\n",eitTable->eitHeader.sectionSyntaxIndicator);
     printf("section_length           |      %d\n",eitTable->eitHeader.sectionLength);
     printf("service_id               |      %d\n",eitTable->eitHeader.serviceId);
