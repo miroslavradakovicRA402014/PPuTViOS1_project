@@ -345,7 +345,7 @@ StreamControllerError startChannel(int32_t channelNumber)
 
 	sleep(4);
 	drawCnannel(currentChannel.programNumber);
-	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext,  currentChannel.eventTime);
+	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext,  currentChannel.eventTime, currentChannel.eventName);
 
 	return SC_NO_ERROR;
 }
@@ -555,7 +555,8 @@ int32_t sectionReceivedCallback(uint8_t *buffer)
 		printf("\n%s -----EIT TABLE ARRIVED-----\n",__FUNCTION__);		
 		if(parseEitTable(buffer,eitTable)==TABLES_PARSE_OK)
         {
-			if ((pmtTable->pmtHeader).programNumber == (eitTable->eitHeader).serviceId)
+			printEitTable(eitTable);
+			if ((pmtTable->pmtHeader).programNumber == (eitTable->eitHeader).serviceId && eitTable->eitInfoArray[0].runningStatus == 0x4)
 			{			
 				getEventTime();
 				printf("Event name %s\n",eitTable->eitInfoArray[0].eventName);

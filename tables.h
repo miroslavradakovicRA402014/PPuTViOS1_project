@@ -120,6 +120,7 @@ typedef struct _EitEventInfo
 	uint8_t runningStatus;
 	uint8_t CAmode;
 	uint16_t descriptorsLoopLength;
+	uint8_t eventNameLength;
 	char eventName[TABLES_MAX_NAME_LEN];
 }EitEventInfo;
 

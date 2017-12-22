@@ -368,13 +368,15 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
     
 	uint8_t i;
 	uint8_t offset;
-	uint8_t eventNameLen = 0;
     uint8_t lower8Bits = 0;
     uint8_t higher8Bits = 0;
+	uint8_t descTag = 0;
+	uint8_t descLength = 0;
     uint16_t all16Bits = 0;
 	uint16_t higher16Bits = 0;
 	uint16_t lower16Bits = 0;
 	uint32_t all32Bits = 0;
+
 
 	higher8Bits = (uint8_t) (*eitEventInfoBuffer);
     lower8Bits = (uint8_t) (*(eitEventInfoBuffer + 1));
@@ -395,22 +397,32 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
 	higher8Bits = (uint8_t) (*(eitEventInfoBuffer + 10));
     lower8Bits = (uint8_t) (*(eitEventInfoBuffer + 11));
     all16Bits = (uint16_t) ((higher8Bits << 8) + lower8Bits);
-    eitEventInfo->runningStatus = (uint8_t)(all16Bits & 0xE000);
+
+    eitEventInfo->runningStatus = (uint8_t)((all16Bits & 0xE000) >> 13);
 	eitEventInfo->CAmode = (uint8_t)(all16Bits & 0x1000);
 	eitEventInfo->descriptorsLoopLength = all16Bits & 0x0FFF;
 
-	offset = 12;
+	offset = 0;
 
-	eventNameLen = (uint8_t) (*(eitEventInfoBuffer + offset + 5));
+	while (offset < eitEventInfo->descriptorsLoopLength)
+	{	
+       	descTag = *(eitEventInfoBuffer + 12 + offset);
+		descLength = *(eitEventInfoBuffer + 13 + offset);
 
-	offset += 5;
+		if(descTag == 0x4d)
+		{
+			eitEventInfo->eventNameLength = (uint8_t) (*(eitEventInfoBuffer + 17 + offset));
+            for(i = 0; i < eitEventInfo->eventNameLength; i++)
+            {
+            	eitEventInfo->eventName[i] = (char)(*(eitEventInfoBuffer + 12 + 6 + i + offset));
+            }
+            eitEventInfo->eventName[i] = '\0';
+		}		
 
-	for (i = 0; i < eventNameLen; i++)
-	{
-		eitEventInfo->eventName[i] = (*(eitEventInfoBuffer + offset + i)) ;
-	}	
-	eitEventInfo->eventName[i] = '\0';
+		offset += descLength + 2;
+	}
 
+	printf("Parsed passed!\n");
 
     return TABLES_PARSE_OK;
 }
@@ -485,9 +497,10 @@ ParseErrorCode printEitTable(EitTable* eitTable)
         printf("event_id                |      %d\n",eitTable->eitInfoArray[i].eventId);
 		printf("start_time              |      %llx\n",eitTable->eitInfoArray[i].startTime);
 		printf("duration                |      %d\n",eitTable->eitInfoArray[i].duration);
-		printf("running_status          |      %d\n",eitTable->eitInfoArray[i].runningStatus);
+		printf("running_status          |      %x\n",eitTable->eitInfoArray[i].runningStatus);
 		printf("CA_mode                 |      %ld\n",eitTable->eitInfoArray[i].CAmode);
 		printf("descriptors_loop_length |      %ld\n",eitTable->eitInfoArray[i].descriptorsLoopLength);
+		printf("event_name_length		|      %ld\n",eitTable->eitInfoArray[i].eventNameLength);
     }
     printf("\n********************EIT TABLE SECTION********************\n");
     
