@@ -367,7 +367,7 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
     }
     
 	uint8_t i;
-	uint8_t offset;
+	uint16_t offset;
     uint8_t lower8Bits = 0;
     uint8_t higher8Bits = 0;
 	uint8_t descTag = 0;
@@ -404,22 +404,30 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
 
 	offset = 0;
 
-	while (offset < eitEventInfo->descriptorsLoopLength)
-	{	
-       	descTag = *(eitEventInfoBuffer + 12 + offset);
-		descLength = *(eitEventInfoBuffer + 13 + offset);
+	if (eitEventInfo->runningStatus == 0x04)
+	{
+		while (offset < eitEventInfo->descriptorsLoopLength)
+		{	
+		   	descTag = *(eitEventInfoBuffer + 12 + offset);
+			descLength = *(eitEventInfoBuffer + 13 + offset);
 
-		if(descTag == 0x4d)
-		{
-			eitEventInfo->eventNameLength = (uint8_t) (*(eitEventInfoBuffer + 17 + offset));
-            for(i = 0; i < eitEventInfo->eventNameLength; i++)
-            {
-            	eitEventInfo->eventName[i] = (char)(*(eitEventInfoBuffer + 12 + 6 + i + offset));
-            }
-            eitEventInfo->eventName[i] = '\0';
-		}		
+			if(descTag == 0x4d)
+			{
+				eitEventInfo->eventNameLength = (uint8_t) (*(eitEventInfoBuffer + 17 + offset));
+		        for(i = 0; i < eitEventInfo->eventNameLength; i++)
+		        {
+		        	eitEventInfo->eventName[i] = (char)(*(eitEventInfoBuffer + 12 + 6 + i + offset));
+		        }
+		        eitEventInfo->eventName[i] = '\0';
 
-		offset += descLength + 2;
+				descLength = *(eitEventInfoBuffer + 18 + eitEventInfo->eventNameLength + offset);
+
+			}		
+
+			printf("Parse more\n %d %d",eitEventInfo->descriptorsLoopLength, offset);
+
+			offset += descLength + 2;
+		}
 	}
 
 	printf("Parsed passed!\n");
