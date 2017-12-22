@@ -40,6 +40,32 @@ GraphicControllerError graphicControllerInit()
     return GC_NO_ERROR;
 }
 
+GraphicControllerError graphicControllerDeinit()
+{
+    if (!isInitialized) 
+    {
+        printf("\n%s : ERROR graphicControllerDeinit() fail, module is not initialized!\n", __FUNCTION__);
+        return GC_ERROR;
+    }
+    
+    threadExit = 1;
+    if (pthread_join(gcThread, NULL))
+    {
+        printf("\n%s : ERROR pthread_join fail!\n", __FUNCTION__);
+        return GC_THREAD_ERROR;
+    }
+
+	/* clean up */
+	timer_delete(timerId);
+	primary->Release(primary);
+	dfbInterface->Release(dfbInterface);
+
+	/* set isInitialized flag */
+    isInitialized = false;
+
+    return GC_NO_ERROR;
+}
+
 GraphicControllerError drawCnannel(int32_t channelNumber)
 {
 	programNumberRender = channelNumber;
@@ -128,32 +154,6 @@ static void* graphicControllerTask()
 		}		
 	}
 
-}
-
-GraphicControllerError graphicControllerDeinit()
-{
-    if (!isInitialized) 
-    {
-        printf("\n%s : ERROR graphicControllerDeinit() fail, module is not initialized!\n", __FUNCTION__);
-        return GC_ERROR;
-    }
-    
-    threadExit = 1;
-    if (pthread_join(gcThread, NULL))
-    {
-        printf("\n%s : ERROR pthread_join fail!\n", __FUNCTION__);
-        return GC_THREAD_ERROR;
-    }
-
-	/* clean up */
-	timer_delete(timerId);
-	primary->Release(primary);
-	dfbInterface->Release(dfbInterface);
-
-	/* set isInitialized flag */
-    isInitialized = false;
-
-    return GC_NO_ERROR;
 }
 
 void drawProgram(int32_t keycode)
@@ -357,8 +357,6 @@ void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext)
 
 void refreshScreen()
 {
-	int32_t ret;
-
     /* clear screen */
     DFBCHECK(primary->SetColor(primary, 0x00, 0x00, 0x00, 0x00));
     DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
