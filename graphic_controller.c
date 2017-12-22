@@ -14,6 +14,7 @@ static int32_t programNumberRender = 0;
 static int32_t volumeLevelRender = 0;
 static int32_t audioPidRender = 0;
 static int32_t videoPidRender = 0;
+static int32_t teletextRender = 0;
 
 static struct itimerspec timerSpec;
 static struct itimerspec timerSpecOld;
@@ -24,7 +25,7 @@ static void* graphicControllerTask();
 static void wipeScreen(union sigval signalArg);
 static void drawProgram(int32_t keycode);
 static void drawVolumeSymbol(int32_t volumeLevel);
-static void drawBanner(int32_t audioPid, int32_t videoPid);
+static void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext);
 static void refreshScreen();
 
 
@@ -51,10 +52,11 @@ GraphicControllerError drawVolumeLevel(int32_t volumeLevel)
 	state.drawVolumeChange = true;
 }
 
-GraphicControllerError drawInfoBanner(int32_t audioPid, int32_t videoPid)
+GraphicControllerError drawInfoBanner(int32_t audioPid, int32_t videoPid, bool teletext)
 {
 	audioPidRender = audioPid;
 	videoPidRender = videoPid;
+	teletextRender = teletextl
 	state.drawInfo = true;	
 }
 
@@ -113,7 +115,7 @@ static void* graphicControllerTask()
 		{
 			refreshScreen();
 			printf("Draw banner!\n");
-			drawBanner(audioPidRender,videoPidRender);
+			drawBanner(audioPidRender, videoPidRender, teletextRender);
 			state.drawInfo = false;
 		}
 
@@ -279,7 +281,7 @@ void drawVolumeSymbol(int32_t volumeLevel)
 }
 
 
-void drawBanner(int32_t audioPid, int32_t videoPid)
+void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext)
 {
     int32_t ret;
 
@@ -289,7 +291,9 @@ void drawBanner(int32_t audioPid, int32_t videoPid)
 	char videoInfo[20];
 	char audioPidStr[5];
 	char videoPidStr[5];
-
+	char txtInfo[8];
+	
+	
 	strcpy(audioInfo, "Audio PID: ");
 	strcpy(videoInfo, "Video PID: ");
 
@@ -313,12 +317,23 @@ void drawBanner(int32_t audioPid, int32_t videoPid)
 	/* generate videoPid string */
     sprintf(videoPidStr,"%d",videoPid);
 	strcat(videoInfo, videoPidStr);
+    /* generate teletext string */
+    if (teletext)
+    {
+    	strcpy(txtInfo, "TXT");
+    }
+    else
+    {
+    	strcpy(txtInfo, "NO TXT");
+    }
     
     /* draw the string */
 
     DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
 	DFBCHECK(primary->DrawString(primary, audioInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));
 	DFBCHECK(primary->DrawString(primary, videoInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL*3, DSTF_CENTER));    
+	DFBCHECK(primary->DrawString(primary, txtInfo, -1, screenWidth-200, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
+    
     
     /* update screen */
     DFBCHECK(primary->Flip(primary, NULL, 0));

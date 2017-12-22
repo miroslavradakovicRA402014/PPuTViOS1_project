@@ -260,6 +260,9 @@ StreamControllerError startChannel(int32_t channelNumber)
     int16_t audioPid = -1;
     int16_t videoPid = -1;
     uint8_t i = 0;
+    bool hasTeletext = false; 
+    
+    
     for (i = 0; i < pmtTable->elementaryInfoCount; i++)
     {
         if (((pmtTable->pmtElementaryInfoArray[i].streamType == 0x1) || (pmtTable->pmtElementaryInfoArray[i].streamType == 0x2) || (pmtTable->pmtElementaryInfoArray[i].streamType == 0x1b))
@@ -283,6 +286,10 @@ StreamControllerError startChannel(int32_t channelNumber)
 				printf("\nERROR Incompatabile audio pid!\n");
   				return SC_ERROR; 	
 			}
+        }
+        else if ((pmtTable->pmtElementaryInfoArray[i].streamType == 0x6))
+        {
+        	hasTeletext = true; 
         }
     }
 
@@ -333,10 +340,11 @@ StreamControllerError startChannel(int32_t channelNumber)
     currentChannel.programNumber = channelNumber;
     currentChannel.audioPid = audioPid;
     currentChannel.videoPid = videoPid;
+	currentChannel.teletext = hasTeletext; 
 
-	sleep(3.8);
+	sleep(3.9);
 	drawCnannel(currentChannel.programNumber);
-	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid);
+	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext);
 
 	return SC_NO_ERROR;
 }

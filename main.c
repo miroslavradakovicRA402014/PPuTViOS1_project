@@ -93,7 +93,7 @@ void remoteControllerCallback(uint16_t code, uint16_t type, uint32_t value)
                 printf("Video pid: %d\n", currentChannel.videoPid);
                 printf("**********************************************************\n");
             }
-			drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid);
+			drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext);
 			break;
 		case KEYCODE_P_PLUS:
 			printf("\nCH+ pressed\n");
