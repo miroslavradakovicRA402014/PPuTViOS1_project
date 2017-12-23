@@ -1,6 +1,8 @@
 #include "graphic_controller.h"
 
-static timer_t timerId;
+static timer_t timerIdV;
+static timer_t timerIdI;
+
 static IDirectFBSurface *primary = NULL;
 static DFBSurfaceDescription surfaceDesc;
 IDirectFB *dfbInterface = NULL;
@@ -9,6 +11,9 @@ static int32_t screenHeight = 0;
 static bool isInitialized = false;
 static uint8_t threadExit = 0;
 static ScreenState state = {false, false, false, false, false};
+static int32_t volumeHeight;
+static int32_t volumeWidth;
+
 
 static int32_t programNumberRender = 0;
 static int32_t volumeLevelRender = 0;
@@ -18,17 +23,20 @@ static int32_t teletextRender = 0;
 static char timeRender[6];
 static char nameRender[50];
 
-static struct itimerspec timerSpec;
-static struct itimerspec timerSpecOld;
+static struct itimerspec timerSpecV;
+static struct itimerspec timerSpecOldV;
+static struct itimerspec timerSpecI;
+static struct itimerspec timerSpecOldI;
 
 static pthread_t gcThread;
 
 static void* graphicControllerTask();
-static void wipeScreen(union sigval signalArg);
+static void* wipeScreenI(union sigval signalArg);
+static void* wipeScreenV(union sigval signalArg);
 static void drawProgram(int32_t keycode);
 static void drawVolumeSymbol(int32_t volumeLevel);
 static void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name);
-static void refreshScreen();
+static void refreshScreenI();
 
 
 GraphicControllerError graphicControllerInit()
@@ -58,7 +66,8 @@ GraphicControllerError graphicControllerDeinit()
     }
 
 	/* clean up */
-	timer_delete(timerId);
+	//timer_delete(timerIdV);
+	timer_delete(timerIdI);
 	primary->Release(primary);
 	dfbInterface->Release(dfbInterface);
 
@@ -96,7 +105,8 @@ static void* graphicControllerTask()
 	int32_t ret;
 
 	/* structure for timer specification */
-    struct sigevent signalEvent;
+    struct sigevent signalEventV;
+    struct sigevent signalEventI;
 
     /* initialize DirectFB */    
 	DFBCHECK(DirectFBInit(NULL, NULL));
@@ -113,13 +123,50 @@ static void* graphicControllerTask()
     DFBCHECK (primary->GetSize(primary, &screenWidth, &screenHeight));
 
 
-	signalEvent.sigev_notify = SIGEV_THREAD; /* tell the OS to notify you about timer by calling the specified function */
-    signalEvent.sigev_notify_function = wipeScreen; /* function to be called when timer runs out */
-    signalEvent.sigev_value.sival_ptr = NULL; /* thread arguments */
-    signalEvent.sigev_notify_attributes = NULL; /* thread attributes (e.g. thread stack size) - if NULL default attributes are applied */
+	signalEventI.sigev_notify = SIGEV_THREAD; /* tell the OS to notify you about timer by calling the specified function */
+    signalEventI.sigev_notify_function = (void*)wipeScreenI; /* function to be called when timer runs out */
+    signalEventI.sigev_value.sival_ptr = NULL; /* thread arguments */
+    signalEventI.sigev_notify_attributes = NULL; /* thread attributes (e.g. thread stack size) - if NULL default attributes are applied */
     ret = timer_create(/*clock for time measuring*/CLOCK_REALTIME,
-                       /*timer settings*/&signalEvent,
-                       /*where to store the ID of the newly created timer*/&timerId);
+                       /*timer settings*/&signalEventI,
+                       /*where to store the ID of the newly created timer*/&timerIdI);
+
+	signalEventV.sigev_notify = SIGEV_THREAD; /* tell the OS to notify you about timer by calling the specified function */
+    signalEventV.sigev_notify_function = (void*)wipeScreenV; /* function to be called when timer runs out */
+    signalEventV.sigev_value.sival_ptr = NULL; /* thread arguments */
+    signalEventV.sigev_notify_attributes = NULL; /* thread attributes (e.g. thread stack size) - if NULL default attributes are applied */
+    ret = timer_create(/*clock for time measuring*/CLOCK_REALTIME,                       /*timer settings*/&signalEventV,
+                       /*where to store the ID of the newly created timer*/&timerIdV);
+    
+//	memset(&timerSpecI,0,sizeof(timerSpecI));
+    
+    /* specify the timer timeout time */
+/*
+    timerSpecI.it_value.tv_sec = 3;
+    timerSpecI.it_value.tv_nsec = 0;
+*/    
+    /* set the new timer specs */
+/*
+    ret = timer_settime(timerIdI,0,&timerSpecI,&timerSpecOldI);
+    if(ret == -1)
+	{
+        printf("Error setting timer in %s!\n", __FUNCTION__);
+    }
+*/
+    /* specify the timer timeout time */
+/*
+    timerSpecV.it_value.tv_sec = 3;
+    timerSpecV.it_value.tv_nsec = 0;
+  */  
+    /* set the new timer specs */
+/*
+    ret = timer_settime(timerIdV,0,&timerSpecV,&timerSpecOldV);
+    if(ret == -1)
+	{
+        printf("Error setting timer in %s!\n", __FUNCTION__);
+    }
+*/
+
     if(ret == -1)
 	{
         printf("Error creating timer, abort!\n");
@@ -136,7 +183,7 @@ static void* graphicControllerTask()
 	{	
 		if (state.drawChannel)
 		{
-			refreshScreen();
+			//refreshScreen();
 			printf("Draw channel number!\n");
 			drawProgram(programNumberRender);
 			state.drawChannel = false;
@@ -144,7 +191,7 @@ static void* graphicControllerTask()
 
 		if (state.drawInfo)
 		{
-			refreshScreen();
+			//refreshScreen();
 			printf("Draw banner!\n");
 			drawBanner(programNumberRender, audioPidRender, videoPidRender, teletextRender, timeRender, nameRender);
 			state.drawInfo = false;
@@ -152,11 +199,13 @@ static void* graphicControllerTask()
 
 		if (state.drawVolumeChange)
 		{
-			refreshScreen();
+			//refreshScreen();
 			printf("Draw volume change!\n");
 			drawVolumeSymbol(volumeLevelRender);
 			state.drawVolumeChange = false;
 		}		
+
+		//DFBCHECK(primary->Flip(primary, NULL, 0));
 	}
 
 }
@@ -194,7 +243,7 @@ void drawProgram(int32_t keycode)
     
     
     /* update screen */
-    DFBCHECK(primary->Flip(primary, NULL, 0));
+   // DFBCHECK(primary->Flip(primary, NULL, 0));
     
 }
 
@@ -203,7 +252,6 @@ void drawVolumeSymbol(int32_t volumeLevel)
     int32_t ret;
 	IDirectFBImageProvider *provider;
 	IDirectFBSurface *volumeSurface = NULL;
-	int32_t volumeHeight, volumeWidth;
 	
     /* create the image provider for the specified file */
 	switch (volumeLevel)
@@ -269,15 +317,16 @@ void drawVolumeSymbol(int32_t volumeLevel)
     
     
     /* set the timer for clearing the screen */
+
+	printf("Timer set \n");
     
-    memset(&timerSpec,0,sizeof(timerSpec));
-    
-    /* specify the timer timeout time */
-    timerSpec.it_value.tv_sec = 3;
-    timerSpec.it_value.tv_nsec = 0;
+      memset(&timerSpecV,0,sizeof(timerSpecV));  
+      /*specify the timer timeout time */
+      timerSpecV.it_value.tv_sec = 3;
+      timerSpecV.it_value.tv_nsec = 0;
     
     /* set the new timer specs */
-    ret = timer_settime(timerId,0,&timerSpec,&timerSpecOld);
+    ret = timer_settime(timerIdV,0,&timerSpecV,&timerSpecOldV);
     if(ret == -1)
 	{
         printf("Error setting timer in %s!\n", __FUNCTION__);
@@ -364,42 +413,87 @@ void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool 
     DFBCHECK(primary->Flip(primary, NULL, 0));
     
     
-    /* set the timer for clearing the screen */
-    
-    memset(&timerSpec,0,sizeof(timerSpec));
+	printf("Timer set \n");
+
+    memset(&timerSpecI,0,sizeof(timerSpecI));
     
     /* specify the timer timeout time */
-    timerSpec.it_value.tv_sec = 3;
-    timerSpec.it_value.tv_nsec = 0;
+    timerSpecI.it_value.tv_sec = 3;
+    timerSpecI.it_value.tv_nsec = 0;
     
     /* set the new timer specs */
-    ret = timer_settime(timerId,0,&timerSpec,&timerSpecOld);
+    ret = timer_settime(timerIdI,0,&timerSpecI,&timerSpecOldI);
     if(ret == -1)
 	{
         printf("Error setting timer in %s!\n", __FUNCTION__);
     }
 }
 
-void refreshScreen()
+void refreshScreenI()
 {
-    /* clear screen */
-    DFBCHECK(primary->SetColor(primary, 0x00, 0x00, 0x00, 0x00));
-    DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
+    /*  draw the frame */
+        
+    DFBCHECK(primary->SetColor(primary, 0xff, 0x0d, 0x46, 0x00));
+    DFBCHECK(primary->FillRectangle(primary, 50, (screenHeight/3)*2, screenWidth-100, screenHeight/4));
     
-    /* update screen */
-    DFBCHECK(primary->Flip(primary, NULL, 0));
+	DFBCHECK(primary->Flip(primary, NULL, 0));
 }
 
-void wipeScreen(union sigval signalArg)
+void refreshScreenV()
 {
-	printf("Screen wiping!\n");
+    /*  draw the frame */
+        
+    DFBCHECK(primary->SetColor(primary, 0xff, 0x0d, 0x46, 0x00));
+    DFBCHECK(primary->FillRectangle(primary, screenWidth - volumeWidth - 50, screenHeight/2 - volumeHeight -50, screenWidth-100, screenHeight/4));
+    
+	DFBCHECK(primary->Flip(primary, NULL, 0));
+}
+
+void* wipeScreenI(union sigval signalArg)
+{
+	printf("Screen wiping I!\n");
 
     /* clear screen */
-    DFBCHECK(primary->SetColor(primary, 0x00, 0x00, 0x00, 0x00));
-    DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
+
+//    DFBCHECK(primary->SetColor(primary, 0x00, 0x00, 0x00, 0x00));
+//    DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
     
     /* update screen */
-    DFBCHECK(primary->Flip(primary, NULL, 0));  
+//    DFBCHECK(primary->Flip(primary, NULL, 0));  
+	state.drawInfo = false;
+
+	  /* stop the timer */
+    memset(&timerSpecI,0,sizeof(timerSpecI));
+    int8_t ret = timer_settime(timerIdI,0,&timerSpecI,&timerSpecOldI);
+    if(ret == -1)
+	{
+        printf("Error setting timer in %s!\n", __FUNCTION__);
+    }
+
+	refreshScreenI();
+}
+
+void* wipeScreenV(union sigval signalArg)
+{
+	printf("Screen wiping V!\n");
+
+    /* clear screen */
+
+//    DFBCHECK(primary->SetColor(primary, 0x00, 0x00, 0x00, 0x00));
+//    DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
+    
+    /* update screen */
+//    DFBCHECK(primary->Flip(primary, NULL, 0));  
+	state.drawVolumeChange = false;
+
+    memset(&timerSpecV,0,sizeof(timerSpecV));
+    int8_t ret = timer_settime(timerIdV,0,&timerSpecV,&timerSpecOldV);
+    if(ret == -1)
+	{
+        printf("Error setting timer in %s!\n", __FUNCTION__);
+    }
+
+	refreshScreenV();
 }
 
 

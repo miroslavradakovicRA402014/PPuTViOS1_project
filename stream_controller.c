@@ -555,15 +555,15 @@ int32_t sectionReceivedCallback(uint8_t *buffer)
     }
 	else if (tableId==0x4E)
 	{
-		printf("\n%s -----EIT TABLE ARRIVED-----\n",__FUNCTION__);		
+		//printf("\n%s -----EIT TABLE ARRIVED-----\n",__FUNCTION__);		
 		if(parseEitTable(buffer,eitTable)==TABLES_PARSE_OK)
         {
 			//printEitTable(eitTable);
 			if ((pmtTable->pmtHeader).programNumber == (eitTable->eitHeader).serviceId && eitTable->eitInfoArray[0].runningStatus == 0x4)
 			{			
 				getEvent();
-				printf("Event name %s\n",eitTable->eitInfoArray[0].eventName);
-				printf("Event name %s \n",currentChannel.eventName);
+				//printf("Event name %s\n",eitTable->eitInfoArray[0].eventName);
+				//printf("Event name %s \n",currentChannel.eventName);
 			} 
 			/*
             pthread_mutex_lock(&demuxMutex);
