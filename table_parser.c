@@ -428,8 +428,6 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
 		}
 	}
 
-	printf("Parsed passed!\n");
-
     return TABLES_PARSE_OK;
 }
 

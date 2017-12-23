@@ -344,7 +344,7 @@ StreamControllerError startChannel(int32_t channelNumber)
 
 	sleep(3.6);
 	drawCnannel(currentChannel.programNumber);
-	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext,  currentChannel.eventTime, currentChannel.eventName);
+	drawInfoBanner(currentChannel.programNumber, currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext,  currentChannel.eventTime, currentChannel.eventName);
 
 	return SC_NO_ERROR;
 }

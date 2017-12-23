@@ -27,7 +27,7 @@ static void* graphicControllerTask();
 static void wipeScreen(union sigval signalArg);
 static void drawProgram(int32_t keycode);
 static void drawVolumeSymbol(int32_t volumeLevel);
-static void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name);
+static void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name);
 static void refreshScreen();
 
 
@@ -80,11 +80,12 @@ GraphicControllerError drawVolumeLevel(int32_t volumeLevel)
 	state.drawVolumeChange = true;
 }
 
-GraphicControllerError drawInfoBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name)
+GraphicControllerError drawInfoBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name)
 {
 	audioPidRender = audioPid;
 	videoPidRender = videoPid;
 	teletextRender = teletext;
+	programNumberRender = channelNumber;
 	strncpy(timeRender,time,6);
 	strncpy(nameRender,name,50);
 	state.drawInfo = true;	
@@ -145,7 +146,7 @@ static void* graphicControllerTask()
 		{
 			refreshScreen();
 			printf("Draw banner!\n");
-			drawBanner(audioPidRender, videoPidRender, teletextRender, timeRender, nameRender);
+			drawBanner(programNumberRender, audioPidRender, videoPidRender, teletextRender, timeRender, nameRender);
 			state.drawInfo = false;
 		}
 
@@ -284,7 +285,7 @@ void drawVolumeSymbol(int32_t volumeLevel)
 
 }
 
-void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name)
+void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name)
 {
     int32_t ret;
 
@@ -294,13 +295,16 @@ void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time, c
 	char videoInfo[20];
 	char audioPidStr[5];
 	char videoPidStr[5];
+	char channelNumStr[5];
 	char txtInfo[8];
 	char timeInfo[6];
 	char nameInfo[50];
+	char cnannelNumberInfo[20];
 	
 	
 	strcpy(audioInfo, "Audio PID: ");
 	strcpy(videoInfo, "Video PID: ");
+	strcpy(cnannelNumberInfo, "Program number: ");
 
     /*  draw the frame */
         
@@ -335,6 +339,10 @@ void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time, c
 	strncpy(timeInfo, time,6);
     /* generate time string */
 	strncpy(nameInfo, name,50);	
+	/* generate channel number string */
+	sprintf(channelNumStr,"%d",channelNumber);
+	strcat(cnannelNumberInfo, channelNumStr);
+
 
     /* draw the string */
 
@@ -344,6 +352,7 @@ void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time, c
 	DFBCHECK(primary->DrawString(primary, txtInfo, -1, screenWidth-200, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
     DFBCHECK(primary->DrawString(primary, timeInfo, -1, (screenWidth/8) - 25, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
     DFBCHECK(primary->DrawString(primary, nameInfo, -1, (screenWidth/2) - 100, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
+    DFBCHECK(primary->DrawString(primary, cnannelNumberInfo, -1, (screenWidth/8) + 140, (screenHeight/3)*2 + 4*FONT_HEIGHT_CHANNEL + 40, DSTF_CENTER));
 
     /* update screen */
     DFBCHECK(primary->Flip(primary, NULL, 0));
