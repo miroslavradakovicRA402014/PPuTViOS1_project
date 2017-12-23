@@ -123,5 +123,6 @@ StreamControllerError mute();
  */
 StreamControllerError getChannelInfo(ChannelInfo* channelInfo);
 
+
 #endif /* __STREAM_CONTROLLER_H__ */
 

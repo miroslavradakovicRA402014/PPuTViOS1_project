@@ -38,10 +38,9 @@ static pthread_cond_t demuxCond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t demuxMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
-
 static void* streamControllerTask();
 static StreamControllerError startChannel(int32_t channelNumber);
-static void getEventTime();
+static void getEvent();
 
 
 StreamControllerError streamControllerInit(char* configFile)
@@ -343,7 +342,7 @@ StreamControllerError startChannel(int32_t channelNumber)
     currentChannel.videoPid = videoPid;
 	currentChannel.teletext = hasTeletext; 
 
-	sleep(4);
+	sleep(3.6);
 	drawCnannel(currentChannel.programNumber);
 	drawInfoBanner(currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext,  currentChannel.eventTime, currentChannel.eventName);
 
@@ -388,6 +387,7 @@ void* streamControllerTask()
         printf("\n%s : ERROR Tuner_Init() fail\n", __FUNCTION__);
         free(patTable);
         free(pmtTable);
+		free(eitTable);
         return (void*) SC_ERROR;
     }
     
@@ -414,6 +414,7 @@ void* streamControllerTask()
         printf("\n%s: ERROR Tuner_Lock_To_Frequency(): %d Hz - fail!\n",__FUNCTION__,config.configFreq);
         free(patTable);
         free(pmtTable);
+		free(eitTable);
         Tuner_Deinit();
         return (void*) SC_ERROR;
     }
@@ -425,6 +426,7 @@ void* streamControllerTask()
         printf("\n%s : ERROR Lock timeout exceeded!\n",__FUNCTION__);
         free(patTable);
         free(pmtTable);
+		free(eitTable);
         Tuner_Deinit();
         return (void*) SC_ERROR;
     }
@@ -436,6 +438,7 @@ void* streamControllerTask()
 		printf("\n%s : ERROR Player_Init() fail\n", __FUNCTION__);
 		free(patTable);
         free(pmtTable);
+		free(eitTable);
         Tuner_Deinit();
         return (void*) SC_ERROR;
 	}
@@ -555,12 +558,12 @@ int32_t sectionReceivedCallback(uint8_t *buffer)
 		printf("\n%s -----EIT TABLE ARRIVED-----\n",__FUNCTION__);		
 		if(parseEitTable(buffer,eitTable)==TABLES_PARSE_OK)
         {
-			printEitTable(eitTable);
+			//printEitTable(eitTable);
 			if ((pmtTable->pmtHeader).programNumber == (eitTable->eitHeader).serviceId && eitTable->eitInfoArray[0].runningStatus == 0x4)
 			{			
-				getEventTime();
+				getEvent();
 				printf("Event name %s\n",eitTable->eitInfoArray[0].eventName);
-				printf("New time arrived\n");
+				printf("Event name %s \n",currentChannel.eventName);
 			} 
 			/*
             pthread_mutex_lock(&demuxMutex);
@@ -591,7 +594,7 @@ int32_t tunerStatusCallback(t_LockStatus status)
     return 0;
 }
 
-void getEventTime()
+void getEvent()
 {
 	uint32_t time = eitTable->eitInfoArray[0].startTime;
 	uint32_t mask = 0x0000F000;
@@ -600,8 +603,6 @@ void getEventTime()
 	uint8_t i;
 	uint8_t j;
 	uint8_t k = 0;
-
-	//printf("Start time %lx\n",time);
 
 	for (i = 0; i <  2; i++)
 	{
@@ -623,8 +624,10 @@ void getEventTime()
 	}
 	parsed_time[5] = '\0';
 	
-	strncpy(currentChannel.eventTime,parsed_time,6);	
+	strncpy(currentChannel.eventTime,parsed_time,6);
+	strncpy(currentChannel.eventName,eitTable->eitInfoArray[0].eventName,50);	
 }
+
 
 
 

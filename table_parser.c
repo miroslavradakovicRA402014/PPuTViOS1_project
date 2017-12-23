@@ -367,11 +367,11 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
     }
     
 	uint8_t i;
-	uint16_t offset;
     uint8_t lower8Bits = 0;
     uint8_t higher8Bits = 0;
 	uint8_t descTag = 0;
 	uint8_t descLength = 0;
+	uint16_t offset;
     uint16_t all16Bits = 0;
 	uint16_t higher16Bits = 0;
 	uint16_t lower16Bits = 0;
@@ -416,15 +416,13 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
 				eitEventInfo->eventNameLength = (uint8_t) (*(eitEventInfoBuffer + 17 + offset));
 		        for(i = 0; i < eitEventInfo->eventNameLength; i++)
 		        {
-		        	eitEventInfo->eventName[i] = (char)(*(eitEventInfoBuffer + 12 + 6 + i + offset));
+		        	eitEventInfo->eventName[i] = (char)(*(eitEventInfoBuffer + 18 + i + offset + 1));
 		        }
-		        eitEventInfo->eventName[i] = '\0';
+		        eitEventInfo->eventName[i-1] = '\0';
 
 				descLength = *(eitEventInfoBuffer + 18 + eitEventInfo->eventNameLength + offset);
 
 			}		
-
-			printf("Parse more\n %d %d",eitEventInfo->descriptorsLoopLength, offset);
 
 			offset += descLength + 2;
 		}

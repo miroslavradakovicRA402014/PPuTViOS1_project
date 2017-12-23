@@ -339,11 +339,12 @@ void drawBanner(int32_t audioPid, int32_t videoPid, bool teletext, char* time, c
     /* draw the string */
 
     DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
-	DFBCHECK(primary->DrawString(primary, audioInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));
-	DFBCHECK(primary->DrawString(primary, videoInfo, -1, 50 + (screenWidth/2) - 50, (screenHeight/3)*2 + 2*FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
+	DFBCHECK(primary->DrawString(primary, audioInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));
+	DFBCHECK(primary->DrawString(primary, videoInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + 2*FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
 	DFBCHECK(primary->DrawString(primary, txtInfo, -1, screenWidth-200, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
-    DFBCHECK(primary->DrawString(primary, timeInfo, -1, 50 + (screenWidth/2) - 180, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
-    DFBCHECK(primary->DrawString(primary, nameInfo, -1, 50 + (screenWidth/8), (screenHeight/3)*2 + 4*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
+    DFBCHECK(primary->DrawString(primary, timeInfo, -1, (screenWidth/8) - 25, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
+    DFBCHECK(primary->DrawString(primary, nameInfo, -1, (screenWidth/2) - 100, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
+
     /* update screen */
     DFBCHECK(primary->Flip(primary, NULL, 0));
     
