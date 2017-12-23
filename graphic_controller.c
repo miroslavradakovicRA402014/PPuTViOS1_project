@@ -347,13 +347,19 @@ void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool 
     /* draw the string */
 
     DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
-	DFBCHECK(primary->DrawString(primary, audioInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));
-	DFBCHECK(primary->DrawString(primary, videoInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + 2*FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
-	DFBCHECK(primary->DrawString(primary, txtInfo, -1, screenWidth-200, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
-    DFBCHECK(primary->DrawString(primary, timeInfo, -1, (screenWidth/8) - 25, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
-    DFBCHECK(primary->DrawString(primary, nameInfo, -1, (screenWidth/2) - 100, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
-    DFBCHECK(primary->DrawString(primary, cnannelNumberInfo, -1, (screenWidth/8) + 140, (screenHeight/3)*2 + 4*FONT_HEIGHT_CHANNEL + 40, DSTF_CENTER));
-
+	DFBCHECK(primary->DrawString(primary, audioInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));   
+	DFBCHECK(primary->DrawString(primary, txtInfo, -1, screenWidth-300, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
+	DFBCHECK(primary->DrawString(primary, cnannelNumberInfo, -1, (screenWidth/8) + 140, (screenHeight/3)*2 + 4*FONT_HEIGHT_CHANNEL + 40, DSTF_CENTER));
+	if (videoPid != -1)
+	{
+		DFBCHECK(primary->DrawString(primary, videoInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + 2*FONT_HEIGHT_CHANNEL, DSTF_CENTER)); 
+	    DFBCHECK(primary->DrawString(primary, timeInfo, -1, (screenWidth/8) - 25, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
+	    DFBCHECK(primary->DrawString(primary, nameInfo, -1, (screenWidth/2) - 100, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
+	}
+	else
+	{
+		DFBCHECK(primary->DrawString(primary, videoInfo, -1, (screenWidth/8) + 60, (screenHeight/3)*2 + 2*FONT_HEIGHT_CHANNEL, DSTF_CENTER)); 
+	}
     /* update screen */
     DFBCHECK(primary->Flip(primary, NULL, 0));
     
