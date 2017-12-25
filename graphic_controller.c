@@ -169,7 +169,7 @@ static void* graphicControllerTask()
 
 		if (state.drawChannel)
 		{
-			printf("Draw channel number!\n");
+			//printf("Draw channel number!\n");
 			drawProgram(programNumberRender);
 			//state.drawChannel = false;
 			//flip = true;
@@ -421,7 +421,7 @@ void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool 
 	}
 	else
 	{
-		DFBCHECK(primary->DrawString(primary, videoInfo, -1, (screenWidth/8) + 60, (screenHeight/3)*2 + 2*FONT_HEIGHT_CHANNEL, DSTF_CENTER)); 
+		//DFBCHECK(primary->DrawString(primary, videoInfo, -1, (screenWidth/8) + 60, (screenHeight/3)*2 + 2*FONT_HEIGHT_CHANNEL, DSTF_CENTER)); 
 	}
     /* update screen */
     //DFBCHECK(primary->Flip(primary, NULL, 0));

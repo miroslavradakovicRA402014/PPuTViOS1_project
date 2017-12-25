@@ -342,7 +342,7 @@ StreamControllerError startChannel(int32_t channelNumber)
     currentChannel.videoPid = videoPid;
 	currentChannel.teletext = hasTeletext; 
 
-	sleep(3.6);
+	sleep(3.7);
 	drawCnannel(currentChannel.programNumber);
 	drawInfoBanner(currentChannel.programNumber, currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext,  currentChannel.eventTime, currentChannel.eventName);
 
@@ -562,14 +562,7 @@ int32_t sectionReceivedCallback(uint8_t *buffer)
 			if ((pmtTable->pmtHeader).programNumber == (eitTable->eitHeader).serviceId && eitTable->eitInfoArray[0].runningStatus == 0x4)
 			{			
 				getEvent();
-				//printf("Event name %s\n",eitTable->eitInfoArray[0].eventName);
-				//printf("Event name %s \n",currentChannel.eventName);
 			} 
-			/*
-            pthread_mutex_lock(&demuxMutex);
-		    pthread_cond_signal(&demuxCond);
-		    pthread_mutex_unlock(&demuxMutex);
-			*/
         }
 
 	}
