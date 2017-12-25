@@ -311,12 +311,8 @@ StreamControllerError startChannel(int32_t channelNumber)
     }
 	else
 	{
-        /* remove previos audio stream */
-        if (streamHandleA != 0)
-        {
-            Player_Stream_Remove(playerHandle, sourceHandle, streamHandleA);
-            streamHandleA = 0;
-        }
+            Player_Stream_Remove(playerHandle, sourceHandle, streamHandleV);
+            streamHandleV = 0;
 	}
 
     if (audioPid != -1)
