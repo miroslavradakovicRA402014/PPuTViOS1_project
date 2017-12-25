@@ -470,6 +470,21 @@ static void drawRadioImage()
 
     DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
     DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
+
+	IDirectFBFont *fontInterface = NULL;
+    DFBFontDescription fontDesc;
+
+    DFBCHECK(primary->SetColor(primary, 0x00, 0x00, 0x00, 0xff));
+       
+    /* draw keycode */    
+	fontDesc.flags = DFDESC_HEIGHT;
+	fontDesc.height = 50;
+
+	DFBCHECK(dfbInterface->CreateFont(dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
+	DFBCHECK(primary->SetFont(primary, fontInterface));
+
+	DFBCHECK(primary->DrawString(primary, "RADIO", -1, screenWidth/2, screenHeight/2, DSTF_CENTER));
+
 /*
 	int32_t ret;
 	IDirectFBImageProvider *provider;
