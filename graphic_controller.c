@@ -13,6 +13,8 @@ static uint8_t threadExit = 0;
 static ScreenState state = {false, false, false, false, false};
 static int32_t volumeHeight;
 static int32_t volumeWidth;
+static int32_t radioHeight;
+static int32_t radioWidth;
 
 
 static int32_t programNumberRender = 0;
@@ -43,6 +45,7 @@ static void* wipeScreenVolume(union sigval signalArg);
 static void drawProgram(int32_t keycode);
 static void drawVolumeSymbol(int32_t volumeLevel);
 static void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name);
+static void drawRadioImage();
 static void refreshScreenInfo();
 static void refreshScreenVolume();
 static void refreshScreen();
@@ -85,6 +88,11 @@ GraphicControllerError graphicControllerDeinit()
     isInitialized = false;
 
     return GC_NO_ERROR;
+}
+
+GraphicControllerError drawRadio(bool radio)
+{
+	state.drawRadio = radio;
 }
 
 GraphicControllerError drawCnannel(int32_t channelNumber)
@@ -166,6 +174,14 @@ static void* graphicControllerTask()
 	while (!threadExit)
 	{	
 		refreshScreen();
+
+		if (state.drawRadio)
+		{
+			//printf("Draw channel number!\n");
+			drawRadioImage();
+			//state.drawChannel = false;
+			//flip = true;
+		}
 
 		if (state.drawChannel)
 		{
@@ -447,6 +463,38 @@ void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool 
     }
 	timer = false;
 	}
+}
+
+static void drawRadioImage()
+{
+
+    DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
+    DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
+/*
+	int32_t ret;
+	IDirectFBImageProvider *provider;
+	IDirectFBSurface *radioSurface = NULL;
+*/
+
+//	DFBCHECK(dfbInterface->CreateImageProvider(dfbInterface, "radio.png", &provider));	
+
+    /* get surface descriptor for the surface where the image will be rendered */
+//	DFBCHECK(provider->GetSurfaceDescription(provider, &surfaceDesc));
+    /* create the surface for the image */
+//	DFBCHECK(dfbInterface->CreateSurface(dfbInterface, &surfaceDesc, &radioSurface));
+    /* render the image to the surface */
+//	DFBCHECK(provider->RenderTo(provider, radioSurface, NULL));
+	
+    /* cleanup the provider after rendering the image to the surface */
+//	provider->Release(provider);
+	
+    /* fetch the logo size and add (blit) it to the screen */
+//	DFBCHECK(radioSurface->GetSize(radioSurface, &radioWidth, &radioHeight));
+//	DFBCHECK(primary->Blit(primary,
+//                           /*source surface*/ radioSurface,
+                           /*source region, NULL to blit the whole surface*/ //NULL,
+                           /*destination x coordinate of the upper left corner of the image*///0,
+                           /*destination y coordinate of the upper left corner of the image*///0));
 }
 
 void refreshScreen()

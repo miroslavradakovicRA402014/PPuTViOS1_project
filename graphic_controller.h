@@ -48,7 +48,7 @@ typedef struct _ScreenState
 	bool drawChannel;
 	bool drawVolumeChange; 
 	bool drawInfo;
-	bool drawBlackScreen;
+	bool drawRadio;
 	bool refreshScreen;
 }ScreenState;
 
@@ -84,6 +84,13 @@ GraphicControllerError drawVolumeLevel(int32_t volumeLevel);
  * @return graphic controller error code
  */
 GraphicControllerError drawInfoBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name);
+
+/**
+ * @brief Draw radio
+ *
+ * @return graphic controller error code
+ */
+GraphicControllerError drawRadio(bool radio);
 
 
 #endif /* __GRAPHIC_CONTROLLER_H__ */

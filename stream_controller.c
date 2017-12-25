@@ -343,8 +343,17 @@ StreamControllerError startChannel(int32_t channelNumber)
 	currentChannel.teletext = hasTeletext; 
 
 	sleep(3.7);
+	if (videoPid != -1)
+	{
+		drawRadio(false);
+	}
+	else
+	{
+		drawRadio(true);
+	}
 	drawCnannel(currentChannel.programNumber);
 	drawInfoBanner(currentChannel.programNumber, currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext,  currentChannel.eventTime, currentChannel.eventName);
+	
 
 	return SC_NO_ERROR;
 }
