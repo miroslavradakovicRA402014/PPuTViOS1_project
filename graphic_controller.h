@@ -16,6 +16,8 @@
 #define FRAME_THICKNESS 5
 #define FONT_HEIGHT_CHANNEL 50
 
+#define TIMER_INTERVAL_SEC 3
+
 /* helper macro for error checking */
 #define DFBCHECK(x...)                                      \
 {                                                           \
@@ -49,7 +51,6 @@ typedef struct _ScreenState
 	bool drawVolumeChange; 
 	bool drawInfo;
 	bool drawRadio;
-	bool refreshScreen;
 }ScreenState;
 
 
@@ -75,12 +76,14 @@ GraphicControllerError drawCnannel(int32_t channelNumber);
 /**
  * @brief Draw volume level symbol
  *
+ * @param  [in] channelNumber - channel number who will be rendered  
  * @return graphic controller error code
  */
 GraphicControllerError drawVolumeLevel(int32_t volumeLevel);
 /**
  * @brief Draw info banner
  *
+ * @param  [in] volumeLevel - volume level who will be rendered
  * @return graphic controller error code
  */
 GraphicControllerError drawInfoBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name);
@@ -88,6 +91,12 @@ GraphicControllerError drawInfoBanner(int32_t channelNumber, int32_t audioPid, i
 /**
  * @brief Draw radio
  *
+ * @param  [in] channelNumber - channel number who will be rendered  	
+ * @param  [in] audioPid - audio pid who will be rendered  	
+ * @param  [in] videoPid - video pid who will be rendered	
+ * @param  [in] teletext - info about exist teletext 	
+ * @param  [in] time - current event time  
+ * @param  [in] name - current event name
  * @return graphic controller error code
  */
 GraphicControllerError drawRadio(bool radio);

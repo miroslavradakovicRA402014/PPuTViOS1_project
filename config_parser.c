@@ -18,7 +18,7 @@ ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 	}
 
 	uint8_t i = 0;
-
+	/* strings for attribute parsed */
 	char configFileTag[CONFIG_LINE_LEN];
 	char configFileSeparator[CONFIG_LINE_LEN];	
 	char configFileValue[CONFIG_LINE_LEN];
@@ -155,6 +155,7 @@ int32_t getAttributeValue(char* value)
 
 FILE* configOpen(char* configFile)
 {
+	/* open config file */
 	FILE* fp = fopen(configFile, "r");
 	
 	if (fp == NULL)

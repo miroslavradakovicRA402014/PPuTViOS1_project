@@ -9,7 +9,6 @@ static RemoteControllerCallback callback = NULL;
 
 RemoteControllerError remoteControllerInit()
 {
-
     /* handle input events in background process*/
     if (pthread_create(&remote, NULL, &inputEventTask, NULL))
     {
@@ -84,7 +83,6 @@ void* inputEventTask()
 			printf("Error while reading input events !");
 			return (void*)RC_ERROR;
 		}
-
 		
 		/* filter input events */
         if(eventBuf.type == EV_KEY && 
@@ -96,9 +94,18 @@ void* inputEventTask()
 			printf("Event value: %d\n",eventBuf.value);
 			printf("\n");
             /* trigger callback */
-            callback(eventBuf.code, eventBuf.type, eventBuf.value);         
+            if (callback != NULL)
+            {
+            	callback(eventBuf.code, eventBuf.type, eventBuf.value);
+            }
+            else
+            {
+				printf("Error while callback !");
+				return (void*)RC_ERROR;            
+            }         
 		}
     }
+    
 	return (void*)RC_NO_ERROR;
 }
 

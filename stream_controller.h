@@ -69,6 +69,7 @@ StreamControllerError streamControllerInit(char* configFile);
 /**
  * @brief Deinitializes stream controller module
  *
+ * @param  [in] configFile - path to config file
  * @return stream controller error code
  */
 StreamControllerError streamControllerDeinit();

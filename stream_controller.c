@@ -4,9 +4,11 @@
 #include "graphic_controller.h"
 #include <string.h>
 
+/* stream tables */
 static PatTable *patTable;
 static PmtTable *pmtTable;
 static EitTable *eitTable;
+
 static pthread_cond_t statusCondition = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t statusMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -45,6 +47,7 @@ static void getEvent();
 
 StreamControllerError streamControllerInit(char* configFile)
 {
+	/* handle stream events in background process */
     if (pthread_create(&scThread, NULL, &streamControllerTask, NULL))
     {
         printf("Error creating input event task!\n");
@@ -137,12 +140,12 @@ StreamControllerError channelDown()
 
 StreamControllerError channelSwitch(int16_t ch)
 {
-
+	/* check that channel exists */
     if (ch > patTable->serviceInfoCount)
     {
         return SC_ERROR;
     } 
-      
+    /* set program to channel */  
     programNumber = ch;
  	
 	printf("\nSwitch to channel %d \n", ch);
@@ -164,7 +167,6 @@ StreamControllerError volumeUp()
  
     /* set flag to start volume up */
     changeVolume = true;
-
 	volumeMute = false;
 
     return SC_NO_ERROR;
@@ -181,7 +183,6 @@ StreamControllerError volumeDown()
  
     /* set flag to start volume down */
     changeVolume = true;
-
 	volumeMute = false;
 
     return SC_NO_ERROR;
@@ -337,8 +338,9 @@ StreamControllerError startChannel(int32_t channelNumber)
     currentChannel.audioPid = audioPid;
     currentChannel.videoPid = videoPid;
 	currentChannel.teletext = hasTeletext; 
-
+	/* sleep until video isn't visible */
 	sleep(3.7);
+	/* check that radio exists */
 	if (videoPid != -1)
 	{
 		drawRadio(false);
@@ -347,6 +349,7 @@ StreamControllerError startChannel(int32_t channelNumber)
 	{
 		drawRadio(true);
 	}
+	/* draw banner */
 	drawCnannel(currentChannel.programNumber);
 	drawInfoBanner(currentChannel.programNumber, currentChannel.audioPid, currentChannel.videoPid, currentChannel.teletext,  currentChannel.eventTime, currentChannel.eventName);
 	
@@ -454,6 +457,7 @@ void* streamControllerTask()
 		printf("\n%s : ERROR Player_Source_Open() fail\n", __FUNCTION__);
 		free(patTable);
         free(pmtTable);
+        free(eitTable);	
 		Player_Deinit(playerHandle);
         Tuner_Deinit();
         return (void*) SC_ERROR;	
@@ -499,15 +503,17 @@ void* streamControllerTask()
     /* set isInitialized flag */
     isInitialized = true;
 
+	/* stream controller loop */
     while(!threadExit)
     {
+    	/* check change channel event */
         if (changeChannel)
         {
             changeChannel = false;
             startChannel(programNumber);
 			printf("\nSwitched to channel %d\n", programNumber);
         }
-
+    	/* check change volume event */
 		if (changeVolume)
         {
             changeVolume = false;
@@ -532,54 +538,51 @@ void* streamControllerTask()
 
 int32_t sectionReceivedCallback(uint8_t *buffer)
 {
-    uint8_t tableId = *buffer;  
+    uint8_t tableId = *buffer; 
+    /* check table id to identify table who has arrived and parse it */ 
     if(tableId==0x00)
     {
-        //printf("\n%s -----PAT TABLE ARRIVED-----\n",__FUNCTION__);
-        
+    	/* pat table arrived */
         if(parsePatTable(buffer,patTable)==TABLES_PARSE_OK)
         {
-            //printPatTable(patTable);
             pthread_mutex_lock(&demuxMutex);
 		    pthread_cond_signal(&demuxCond);
 		    pthread_mutex_unlock(&demuxMutex);
-            
         }
     } 
     else if (tableId==0x02)
-    {
-        //printf("\n%s -----PMT TABLE ARRIVED-----\n",__FUNCTION__);
-        
+    {        
+    	/* pmt table arrived */
         if(parsePmtTable(buffer,pmtTable)==TABLES_PARSE_OK)
         {
-            //printPmtTable(pmtTable);
             pthread_mutex_lock(&demuxMutex);
 		    pthread_cond_signal(&demuxCond);
 		    pthread_mutex_unlock(&demuxMutex);
         }
     }
-	else if (tableId==0x4E)
-	{
-		//printf("\n%s -----EIT TABLE ARRIVED-----\n",__FUNCTION__);		
+	else if (tableId==0x4e)
+	{	
+		/* eit table arrived */	
 		if(parseEitTable(buffer,eitTable)==TABLES_PARSE_OK)
         {
-			//printEitTable(eitTable);
 			if ((pmtTable->pmtHeader).programNumber == (eitTable->eitHeader).serviceId && eitTable->eitInfoArray[0].runningStatus == 0x4)
-			{			
+			{	
+				/* if arrived current event for current channel get event name and time */		
 				getEvent();
 			} 
         }
 
 	}
 
-
     return 0;
 }
 
 int32_t tunerStatusCallback(t_LockStatus status)
 {
+	/* check tuner callback to check when tuner is locked to frequency */
     if(status == STATUS_LOCKED)
     {
+    	/* notify that tuner is locked to frequency */
         pthread_mutex_lock(&statusMutex);
         pthread_cond_signal(&statusCondition);
         pthread_mutex_unlock(&statusMutex);
@@ -592,21 +595,24 @@ int32_t tunerStatusCallback(t_LockStatus status)
     return 0;
 }
 
+/* parse time and name from eit table */
 void getEvent()
 {
 	uint32_t time = eitTable->eitInfoArray[0].startTime;
-	uint32_t mask = 0x0000F000;
+	uint32_t mask = 0x0000f000; 
 	uint16_t num;
 	char parsed_time[MAX_EVENT_LEN]; 
 	uint8_t i;
 	uint8_t j;
 	uint8_t k = 0;
-
+	/* get time from time in 32 bit hex format */
 	for (i = 0; i <  2; i++)
 	{
 		for (j = 0; j < 2; j++,k++)
 		{
+			/* get time digit */
 			num = time & mask;
+			/* shift mask at next position to get next digit */
 			mask >>= 4;
 			num >>= (12 - 4 * (i*2 + j));
 			if (k == 2)
@@ -621,7 +627,7 @@ void getEvent()
 		}
 	}
 	parsed_time[5] = '\0';
-	
+	/* copy to event event channel */
 	strncpy(currentChannel.eventTime,parsed_time,6);
 	strncpy(currentChannel.eventName,eitTable->eitInfoArray[0].eventName,50);	
 }
