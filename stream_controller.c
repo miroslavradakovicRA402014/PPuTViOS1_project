@@ -339,7 +339,7 @@ StreamControllerError startChannel(int32_t channelNumber)
     currentChannel.videoPid = videoPid;
 	currentChannel.teletext = hasTeletext; 
 	/* sleep until video isn't visible */
-	sleep(3.7);
+	sleep(3.9);
 	/* check that radio exists */
 	if (videoPid != -1)
 	{

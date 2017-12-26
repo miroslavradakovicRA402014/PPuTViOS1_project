@@ -124,7 +124,7 @@ GraphicControllerError drawInfoBanner(int32_t channelNumber, int32_t audioPid, i
 	timerEnableInfo = true;
 }
 
-static void* graphicControllerTask()
+void* graphicControllerTask()
 {
 	int32_t ret;
 
