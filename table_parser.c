@@ -403,9 +403,10 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
 	eitEventInfo->descriptorsLoopLength = all16Bits & 0x0FFF;
 
 	offset = 0;
-
+	/* check is event current */
 	if (eitEventInfo->runningStatus == 0x04)
 	{
+		/* descriptor loop */
 		while (offset < eitEventInfo->descriptorsLoopLength)
 		{	
 		   	descTag = *(eitEventInfoBuffer + 12 + offset);
@@ -421,7 +422,6 @@ ParseErrorCode parseEitEventInfo(const uint8_t* eitEventInfoBuffer, EitEventInfo
 		        eitEventInfo->eventName[i-1] = '\0';
 
 				descLength = *(eitEventInfoBuffer + 18 + eitEventInfo->eventNameLength + offset);
-
 			}		
 
 			offset += descLength + 2;

@@ -24,14 +24,14 @@ typedef enum _ParseErrorCode
  */
 typedef struct _PatHeader
 {
-    uint8_t     tableId;                            /* The type of table */
-    uint8_t     sectionSyntaxIndicator;             /* The format of the table section to follow */
-    uint16_t    sectionLength;                      /* The length of the table section beyond this field */
-    uint16_t    transportStreamId;                  /* Transport stream identifier */
-    uint8_t     versionNumber;                      /* The version number the private table section */
-    uint8_t     currentNextIndicator;               /* Signals what a particular table will look like when it next changes */
-    uint8_t     sectionNumber;                      /* Section number */
-    uint8_t     lastSectionNumber;                  /* Signals the last section that is valid for a particular MPEG-2 private table */
+    uint8_t     tableId;                            
+    uint8_t     sectionSyntaxIndicator;             
+    uint16_t    sectionLength;                      
+    uint16_t    transportStreamId;                 
+    uint8_t     versionNumber;                      
+    uint8_t     currentNextIndicator;               
+    uint8_t     sectionNumber;                      
+    uint8_t     lastSectionNumber;                 
 }PatHeader;
 
 /**
