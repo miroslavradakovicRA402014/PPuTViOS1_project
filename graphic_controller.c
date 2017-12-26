@@ -5,7 +5,9 @@ static timer_t timerIdInfo;
 
 static IDirectFBSurface *primary = NULL;
 static DFBSurfaceDescription surfaceDesc;
-IDirectFB *dfbInterface = NULL;
+static IDirectFB *dfbInterface = NULL;
+static IDirectFBFont *fontInterface = NULL;
+static DFBFontDescription fontDesc;
 static int32_t screenWidth = 0;
 static int32_t screenHeight = 0;
 static bool isInitialized = false;
@@ -13,6 +15,7 @@ static uint8_t threadExit = 0;
 static ScreenState state = {false, false, false, false};
 static int32_t volumeHeight;
 static int32_t volumeWidth;
+
 
 /* render values */
 static int32_t programNumberRender = 0;
@@ -139,7 +142,13 @@ static void* graphicControllerTask()
 	surfaceDesc.caps = DSCAPS_PRIMARY | DSCAPS_FLIPPING;
 	DFBCHECK (dfbInterface->CreateSurface(dfbInterface, &surfaceDesc, &primary));
     
-    
+	/* create font */
+	fontDesc.flags = DFDESC_HEIGHT;
+	fontDesc.height = FONT_HEIGHT;	
+
+	DFBCHECK(dfbInterface->CreateFont(dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
+	DFBCHECK(primary->SetFont(primary, fontInterface));
+
     /* fetch the screen size */
     DFBCHECK (primary->GetSize(primary, &screenWidth, &screenHeight));
 
@@ -207,8 +216,6 @@ static void* graphicControllerTask()
 void drawProgram(int32_t keycode)
 {
     int32_t ret;
-    IDirectFBFont *fontInterface = NULL;
-    DFBFontDescription fontDesc;
     char keycodeString[4];
         
     /*  draw the frame */
@@ -220,19 +227,13 @@ void drawProgram(int32_t keycode)
     DFBCHECK(primary->FillRectangle(primary, 50+FRAME_THICKNESS, 50+FRAME_THICKNESS, screenWidth/8-2*FRAME_THICKNESS, screenHeight/8-2*FRAME_THICKNESS));
        
     /* draw keycode */
-    
-	fontDesc.flags = DFDESC_HEIGHT;
-	fontDesc.height = FONT_HEIGHT_CHANNEL;
-	
-	DFBCHECK(dfbInterface->CreateFont(dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
-	DFBCHECK(primary->SetFont(primary, fontInterface));
-    
+   
     /* generate keycode string */
     sprintf(keycodeString,"%d",keycode);
     
     /* draw the string */
     DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
-	DFBCHECK(primary->DrawString(primary, keycodeString, -1, 50+screenWidth/16, 50+screenHeight/16 + FONT_HEIGHT_CHANNEL/2, DSTF_CENTER));
+	DFBCHECK(primary->DrawString(primary, keycodeString, -1, 50+screenWidth/16, 50+screenHeight/16 + FONT_HEIGHT/2, DSTF_CENTER));
         
 }
 
@@ -323,8 +324,6 @@ void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool 
 {
     int32_t ret;
 
-    IDirectFBFont *fontInterface = NULL;
-    DFBFontDescription fontDesc;
 	char audioInfo[20];     
 	char videoInfo[20];
 	char audioPidStr[5];
@@ -347,13 +346,6 @@ void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool 
       
     /* draw info */
     
-	fontDesc.flags = DFDESC_HEIGHT;
-	fontDesc.height = FONT_HEIGHT_CHANNEL;
-	
-	DFBCHECK(dfbInterface->CreateFont(dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
-	DFBCHECK(primary->SetFont(primary, fontInterface));
-
-
 	/* generate audioPid string */
     sprintf(audioPidStr,"%d",audioPid);
 	strcat(audioInfo, audioPidStr);
@@ -380,14 +372,14 @@ void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool 
     /* draw the string */
 
     DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
-	DFBCHECK(primary->DrawString(primary, audioInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));   
-	DFBCHECK(primary->DrawString(primary, txtInfo, -1, screenWidth-300, (screenHeight/3)*2 + FONT_HEIGHT_CHANNEL, DSTF_CENTER));    
-	DFBCHECK(primary->DrawString(primary, cnannelNumberInfo, -1, (screenWidth/8) + 140, (screenHeight/3)*2 + 4*FONT_HEIGHT_CHANNEL + 40, DSTF_CENTER));
+	DFBCHECK(primary->DrawString(primary, audioInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + FONT_HEIGHT, DSTF_CENTER));   
+	DFBCHECK(primary->DrawString(primary, txtInfo, -1, screenWidth-300, (screenHeight/3)*2 + FONT_HEIGHT, DSTF_CENTER));    
+	DFBCHECK(primary->DrawString(primary, cnannelNumberInfo, -1, (screenWidth/8) + 140, (screenHeight/3)*2 + 4*FONT_HEIGHT + 40, DSTF_CENTER));
 	if (videoPid != -1)
 	{
-		DFBCHECK(primary->DrawString(primary, videoInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + 2*FONT_HEIGHT_CHANNEL, DSTF_CENTER)); 
-	    DFBCHECK(primary->DrawString(primary, timeInfo, -1, (screenWidth/8) - 25, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
-	    DFBCHECK(primary->DrawString(primary, nameInfo, -1, (screenWidth/2) - 100, (screenHeight/3)*2 + 3*FONT_HEIGHT_CHANNEL + 20, DSTF_CENTER));
+		DFBCHECK(primary->DrawString(primary, videoInfo, -1, (screenWidth/8) + 100, (screenHeight/3)*2 + 2*FONT_HEIGHT, DSTF_CENTER)); 
+	    DFBCHECK(primary->DrawString(primary, timeInfo, -1, (screenWidth/8) - 25, (screenHeight/3)*2 + 3*FONT_HEIGHT + 20, DSTF_CENTER));
+	    DFBCHECK(primary->DrawString(primary, nameInfo, -1, (screenWidth/2) - 100, (screenHeight/3)*2 + 3*FONT_HEIGHT + 20, DSTF_CENTER));
 	}
  
    	/* if timer enabled start timer */  
@@ -417,17 +409,10 @@ void drawRadioImage()
     DFBCHECK(primary->SetColor(primary, 0xff, 0xff, 0xff, 0xff));
     DFBCHECK(primary->FillRectangle(primary, 0, 0, screenWidth, screenHeight));
 
-	IDirectFBFont *fontInterface = NULL;
-    DFBFontDescription fontDesc;
 
     DFBCHECK(primary->SetColor(primary, 0x00, 0x00, 0x00, 0xff));
        
-    /* draw keycode */    
-	fontDesc.flags = DFDESC_HEIGHT;
-	fontDesc.height = 50;
-
-	DFBCHECK(dfbInterface->CreateFont(dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
-	DFBCHECK(primary->SetFont(primary, fontInterface));
+    /* draw radio text */    
 
 	DFBCHECK(primary->DrawString(primary, "RADIO", -1, screenWidth/2, screenHeight/2, DSTF_CENTER));
 	

@@ -14,7 +14,7 @@
 #include <stdbool.h>
 
 #define FRAME_THICKNESS		5
-#define FONT_HEIGHT_CHANNEL 50
+#define FONT_HEIGHT 50
 
 #define TIMER_INTERVAL_SEC 3
 
