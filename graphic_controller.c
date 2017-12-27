@@ -1,7 +1,18 @@
 #include "graphic_controller.h"
 
+/* timers instances */
 static timer_t timerIdVolume;
 static timer_t timerIdInfo;
+
+/* timer specs */
+static struct itimerspec timerSpecVolume;
+static struct itimerspec timerSpecOldVolume;
+static struct itimerspec timerSpecInfo;
+static struct itimerspec timerSpecOldInfo;
+
+/* timers enable flags */
+static bool timerEnableInfo = false;
+static bool timerEnableVolume = false;
 
 static IDirectFBSurface *primary = NULL;
 static DFBSurfaceDescription surfaceDesc;
@@ -26,16 +37,7 @@ static int32_t teletextRender = 0;
 static char timeRender[6];
 static char nameRender[50];
 
-/* timer specs */
-static struct itimerspec timerSpecVolume;
-static struct itimerspec timerSpecOldVolume;
-static struct itimerspec timerSpecInfo;
-static struct itimerspec timerSpecOldInfo;
-
 static pthread_t gcThread;
-
-static bool timerEnableInfo = false;
-static bool timerEnableVolume = false;
 
 static void* graphicControllerTask();
 static void* wipeScreenInfo(union sigval signalArg);
@@ -45,7 +47,6 @@ static void drawVolumeSymbol(int32_t volumeLevel);
 static void drawBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name);
 static void drawRadioImage();
 static void refreshScreen();
-
 
 
 GraphicControllerError graphicControllerInit()
@@ -91,6 +92,8 @@ GraphicControllerError drawRadio(bool radio)
 {
 	/* set radio flag */
 	state.drawRadio = radio;
+	
+	return GC_NO_ERROR;
 }
 
 GraphicControllerError drawCnannel(int32_t channelNumber)
@@ -99,6 +102,8 @@ GraphicControllerError drawCnannel(int32_t channelNumber)
 	programNumberRender = channelNumber;
 	/* set channel flag*/
 	state.drawChannel = true;
+	
+	return GC_NO_ERROR;
 }
 
 GraphicControllerError drawVolumeLevel(int32_t volumeLevel)
@@ -108,6 +113,8 @@ GraphicControllerError drawVolumeLevel(int32_t volumeLevel)
 	/* set timer flag and volume flag */
 	state.drawVolumeChange = true;
 	timerEnableVolume = true;
+	
+	return GC_NO_ERROR;
 }
 
 GraphicControllerError drawInfoBanner(int32_t channelNumber, int32_t audioPid, int32_t videoPid, bool teletext, char* time, char* name)
@@ -122,6 +129,8 @@ GraphicControllerError drawInfoBanner(int32_t channelNumber, int32_t audioPid, i
 	/* set timer flag and banner flag */	
 	state.drawInfo = true;	
 	timerEnableInfo = true;
+	
+	return GC_NO_ERROR;
 }
 
 void* graphicControllerTask()

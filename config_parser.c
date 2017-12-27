@@ -18,13 +18,14 @@ ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 	}
 
 	uint8_t i = 0;
-	/* strings for attribute parsed */
+	/* strings for attribute parse */
 	char configFileTag[CONFIG_LINE_LEN];
 	char configFileSeparator[CONFIG_LINE_LEN];	
 	char configFileValue[CONFIG_LINE_LEN];
-
+	/* read file line by line and parse attributes */
 	while (!feof(fp))
 	{
+		/* parse attribute tag */
 		if (i == 0)
 		{
 			fscanf(fp, "%s", configFileTag);
@@ -33,11 +34,13 @@ ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 				i++;
 			}
 		}
+		/* parse separator */
 		else if (i == 1)
 		{
 			i++;
 			fscanf(fp, "%s", configFileSeparator);		
 		}
+		/* parse attribute value */
 		else if (i == 2)
 		{
 			i = 0;
@@ -62,6 +65,8 @@ ConfigErrorCode parseConfigFile(char* configFile, InitConfig* config)
 
 ConfigErrorCode parseAttribute(char* tag, char* value, InitConfig* config)
 {
+	/* match tag with attribute and write parsed atribute at config struct */
+	
 	if (!strcmp(tag,"FREQUENCY"))
 	{
 		config->configFreq = getAttributeValue(value);
@@ -123,6 +128,18 @@ ConfigErrorCode parseAttribute(char* tag, char* value, InitConfig* config)
 		{
 			config->configVideoType = VIDEO_TYPE_MPEG2;
 		}
+		else if (!strcmp(value,"VIDEO_TYPE_MPEG4"))
+		{
+			config->configVideoType = VIDEO_TYPE_MPEG4;
+		}	
+		else if (!strcmp(value,"VIDEO_TYPE_MPEG1"))
+		{
+			config->configVideoType = VIDEO_TYPE_MPEG1;
+		}	
+		else if (!strcmp(value,"VIDEO_TYPE_JPEG"))
+		{
+			config->configVideoType = VIDEO_TYPE_JPEG;
+		}				
 		else
 		{
 			printf("\nModule %s doesn't exist!\n", value);	
@@ -133,6 +150,7 @@ ConfigErrorCode parseAttribute(char* tag, char* value, InitConfig* config)
 	return CONFIG_PARSE_OK;		
 }
 
+/* convert string attribute at integer value */
 int32_t getAttributeValue(char* value)
 {
 	int32_t attr;
@@ -143,11 +161,9 @@ int32_t getAttributeValue(char* value)
 	{
 		n++;
 	}
-	
 	val[n] = '\0';
 
 	strncpy(val, value, n);
-
 	attr = atoi(val);
 	
 	return attr;
